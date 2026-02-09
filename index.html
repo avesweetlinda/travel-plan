@@ -111,7 +111,7 @@
 
         .container {
             width: 100%;
-            max-width: 900px;
+            max-width: 1100px; /* 加寬容器 */
             background: var(--card-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -220,7 +220,7 @@
 
         /* 左側導覽列 */
         .sidebar {
-            width: 110px;
+            width: 160px; /* 加寬側邊欄 */
             background: var(--sidebar-bg);
             border-right: 1px solid rgba(0,0,0,0.05);
             padding: 20px 0;
@@ -379,6 +379,23 @@
             border-color: #2196f3;
         }
         
+        /* 新行程與清單按鈕 */
+        .new-trip-btn {
+            background: #6c5ce7;
+            color: white;
+            border-color: #6c5ce7;
+            font-weight: bold;
+        }
+        .new-trip-btn:hover { background: #a29bfe; border-color: #a29bfe; color: white; }
+
+        .trip-list-btn {
+            background: #00cec9;
+            color: white;
+            border-color: #00cec9;
+            font-weight: bold;
+        }
+        .trip-list-btn:hover { background: #81ecec; border-color: #81ecec; color: white; }
+
         /* 鎖定按鈕 */
         .lock-btn:hover { background: #f1f2f6; }
         .lock-btn.active {
@@ -789,6 +806,19 @@
         }
         .modal-close:hover { color: #bbb; }
 
+        /* 行程清單 Modal 樣式 */
+        .trip-list { list-style: none; padding: 0; margin: 0; max-height: 400px; overflow-y: auto; }
+        .trip-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; background: white; transition: background 0.2s; }
+        .trip-item:last-child { border-bottom: none; }
+        .trip-item:hover { background-color: #f8f9fa; }
+        .trip-link { flex: 1; text-decoration: none; color: #2d3436; font-weight: bold; cursor: pointer; display: flex; align-items: center; }
+        .trip-link:hover { color: var(--accent-color); }
+        .trip-delete { color: #b2bec3; cursor: pointer; padding: 5px 10px; border-radius: 4px; transition: all 0.2s; }
+        .trip-delete:hover { background-color: #ffe0e0; color: #d63031; }
+        .current-trip-tag { font-size: 0.7rem; background: var(--accent-color); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: normal; }
+        .modal-box { background: white; width: 90%; max-width: 500px; border-radius: 12px; padding: 20px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-header { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+
 
         /* --- 鎖定模式樣式 --- */
         body.locked-mode .input-group { display: none; }
@@ -798,6 +828,7 @@
         /* 鎖定時也隱藏側邊欄的按鈕 */
         body.locked-mode .clear-btn { display: none; } 
         body.locked-mode .reset-btn { display: none; }
+        body.locked-mode .new-trip-btn { display: none; } /* ★★★ 鎖定時隱藏建立新行程按鈕 */
         
         /* 鎖定時禁用編輯功能 */
         body.locked-mode .editable-text { pointer-events: none; }
@@ -904,6 +935,16 @@
             <button id="btn-all" class="sidebar-btn static-btn" onclick="switchView('all')">全部</button>
             <div id="daySidebarList"></div>
             <div class="sidebar-controls">
+                <!-- 新增：建立新行程按鈕 -->
+                <button class="action-btn new-trip-btn" onclick="createNewTrip()" title="開始一個全新的空白行程">
+                    ✨ 建立新行程
+                </button>
+
+                <!-- 新增：我的行程清單按鈕 -->
+                <button class="action-btn trip-list-btn" onclick="openTripListModal()" title="查看我建立過的所有行程">
+                    📂 我的行程
+                </button>
+
                 <div class="day-controls">
                     <button class="control-btn" onclick="changeTotalDays(-1)" title="減少一天">－</button>
                     <button class="control-btn" onclick="changeTotalDays(1)" title="增加一天">＋</button>
@@ -945,12 +986,26 @@
     <img class="modal-content" id="modalImg">
 </div>
 
+<!-- 新增：行程清單 Modal -->
+<div id="tripListModal" class="modal" style="z-index: 3000;">
+    <div class="modal-box">
+        <div class="modal-header">
+            📂 我的行程清單
+            <span onclick="closeTripListModal()" style="cursor:pointer; font-size:1.5rem;">&times;</span>
+        </div>
+        <ul id="myTripList" class="trip-list">
+            <!-- JS 動態生成清單 -->
+        </ul>
+    </div>
+</div>
+
 <script>
     // --- 雲端整合變數 ---
     let db, auth, appId;
     let tripId = null;
     let currentUser = null;
     let saveTimeout = null;
+    const STORAGE_KEY_TRIPS = 'iceland_vibe_my_trips';
 
     // 預設資料
     const DEFAULT_TITLE = "冰島環島攻略 🇮🇸";
@@ -1047,6 +1102,7 @@
                 window.history.pushState({path:newUrl}, '', newUrl);
             } catch (e) { console.warn("Preview Mode: URL history update skipped."); }
             await saveToCloud(true);
+            updateTripHistory(tripId, appState.title); // 更新歷史紀錄
             hideLoading();
             renderUI();
         } else {
@@ -1057,8 +1113,10 @@
                     const data = docSnap.data();
                     appState = { ...appState, ...data };
                     if (!appState.plans) appState.plans = [];
+                    updateTripHistory(tripId, appState.title); // 更新歷史紀錄
                 } else {
                     await saveToCloud(true);
+                    updateTripHistory(tripId, appState.title); // 更新歷史紀錄
                 }
             } catch (e) {
                 console.error("Load Error:", e);
@@ -1082,8 +1140,74 @@
             const docRef = doc(db, 'public_trips', tripId);
             await setDoc(docRef, appState);
             console.log("Cloud Saved");
+            updateTripHistory(tripId, appState.title); // 確保標題同步更新到清單
         } catch (e) { console.error("Save Error:", e); }
     }
+
+    // --- My Trip List History Logic (LocalStorage) ---
+
+    function updateTripHistory(id, title) {
+        let history = JSON.parse(localStorage.getItem(STORAGE_KEY_TRIPS) || '[]');
+        // 移除舊的相同 ID 紀錄
+        history = history.filter(trip => trip.id !== id);
+        // 加到最前面
+        history.unshift({ id, title, timestamp: Date.now() });
+        // 限制數量，例如最近 20 筆
+        if (history.length > 20) history = history.slice(0, 20);
+        localStorage.setItem(STORAGE_KEY_TRIPS, JSON.stringify(history));
+    }
+
+    function getTripHistory() {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY_TRIPS) || '[]');
+    }
+
+    function deleteTripFromHistory(id) {
+        if (!confirm("確定要從清單中移除此紀錄嗎？(不會刪除雲端資料)")) return;
+        let history = getTripHistory();
+        history = history.filter(trip => trip.id !== id);
+        localStorage.setItem(STORAGE_KEY_TRIPS, JSON.stringify(history));
+        renderTripListModal(); // 重新渲染清單
+    }
+
+    function openTripListModal() {
+        const modal = document.getElementById('tripListModal');
+        modal.style.display = 'flex';
+        renderTripListModal();
+    }
+
+    function closeTripListModal() {
+        document.getElementById('tripListModal').style.display = 'none';
+    }
+
+    function renderTripListModal() {
+        const listEl = document.getElementById('myTripList');
+        listEl.innerHTML = '';
+        const history = getTripHistory();
+
+        if (history.length === 0) {
+            listEl.innerHTML = '<li style="padding:15px; text-align:center; color:#999;">尚無瀏覽紀錄</li>';
+            return;
+        }
+
+        history.forEach(trip => {
+            const li = document.createElement('li');
+            li.className = 'trip-item';
+            
+            const isCurrent = (trip.id === tripId);
+            const currentTag = isCurrent ? '<span class="current-trip-tag">目前</span>' : '';
+            const bgStyle = isCurrent ? 'background-color: #f0f9ff;' : '';
+
+            li.style = bgStyle;
+            li.innerHTML = `
+                <div class="trip-link" onclick="location.href='?trip=${trip.id}'">
+                    ${trip.title || '未命名行程'} ${currentTag}
+                </div>
+                <span class="trip-delete" onclick="deleteTripFromHistory('${trip.id}')" title="從清單移除">&times;</span>
+            `;
+            listEl.appendChild(li);
+        });
+    }
+
 
     // --- UI Logic ---
     function hideLoading() {
@@ -1401,6 +1525,14 @@
             appState.totalDays = 1;
             renderSidebar(); renderDaySelect(); switchView('all');
             autoSave();
+        }
+    }
+
+    function createNewTrip() {
+        if(confirm("確定要建立一個新的行程嗎？\n(請確保目前的網址已保存，否則將無法找回此行程)")) {
+            const url = new URL(window.location.href);
+            url.search = ""; // 清除 ?trip=...
+            window.location.href = url.toString();
         }
     }
 
