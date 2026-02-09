@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>冰島之旅 Iceland Vibe 🇮🇸</title>
+    
+    <!-- ★★★ 這裡原本寫死冰島，現在改為通用標題，避免分享時誤會 ★★★ -->
+    <title>Travel Vibe ✈️ 旅程規劃</title>
+    <meta property="og:title" content="Travel Vibe ✈️ 旅程規劃">
+    <meta property="og:description" content="點擊查看詳細行程安排">
+
     <!-- 引入 SortableJS 實現拖拉功能 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     
@@ -903,8 +908,10 @@
     let currentUser = null;
     let saveTimeout = null;
 
-    const DEFAULT_TITLE = "冰島環島攻略 🇮🇸";
+    const DEFAULT_TITLE = "我的旅遊行程"; // 改為通用預設標題
     const DEFAULT_BANNER = "https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=1000&auto=format&fit=crop";
+    
+    // 預設行程資料 (範例)
     const defaultItinerary = [
        { id: 101, day: 1, time: "08:00", activity: "TPE ✈️ HKG (國泰 CX477/495)", tag: "flight", image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=200&h=200&fit=crop", note: "記得提早2小時到機場報到" },
        { id: 102, day: 1, time: "14:55", activity: "HKG 轉機 (中轉歐洲)", tag: "flight", image: "https://images.unsplash.com/photo-1542296332-2e44a996aa0d?w=200&h=200&fit=crop" },
@@ -1031,7 +1038,12 @@
             }, { merge: true });
 
             console.log("Cloud Saved");
-        } catch (e) { console.error("Save Error:", e); }
+        } catch (e) { 
+            console.error("Save Error:", e); 
+            if (e.code === 'permission-denied' || e.message.includes('permissions')) {
+                alert("⚠️ 儲存失敗：權限不足\n\n請到 Firebase Console > Firestore Database > Rules\n將規則修改為允許讀寫 (Test Mode)。\n\n範例規則:\nallow read, write: if true;");
+            }
+        }
     }
 
     // --- Trip List Logic (Firestore) ---
@@ -1076,7 +1088,11 @@
             });
         } catch (e) {
             console.error("List Error:", e);
-            listEl.innerHTML = '<li style="padding:15px; text-align:center; color:red;">讀取失敗，請確認 Firestore 索引或規則</li>';
+            if (e.code === 'permission-denied' || e.message.includes('permissions')) {
+                listEl.innerHTML = '<li style="padding:15px; text-align:center; color:red;">無法讀取列表，權限不足。<br>請檢查 Firestore Rules。</li>';
+            } else {
+                listEl.innerHTML = '<li style="padding:15px; text-align:center; color:red;">讀取失敗，請稍後再試。</li>';
+            }
         }
     }
 
@@ -1498,13 +1514,18 @@
     }
 
     function shareTrip() {
+        // ... (shareTrip logic)
         let url = window.location.href;
+        
         if (!url.includes('trip=') && tripId) {
             const separator = url.includes('?') ? '&' : '?';
             url = `${url}${separator}trip=${tripId}`;
         }
+        
+        const textToCopy = `${appState.title}\n${url}`;
+
         if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(url).then(() => showToast("已複製連結！🔗"));
+            navigator.clipboard.writeText(textToCopy).then(() => showToast("已複製連結與標題！🔗"));
         } else {
             prompt("複製網址:", url);
         }
