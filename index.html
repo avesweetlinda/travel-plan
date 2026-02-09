@@ -37,7 +37,7 @@
         // ==========================================
         // ★★★ 3. 管理員密碼 (編輯權限鎖) ★★★
         // ==========================================
-        const ADMIN_PASSWORD = "MM1234567890"; // ← 請修改此密碼
+        const ADMIN_PASSWORD = "MM1234567890"; 
 
         // --- Firebase 初始化邏輯 ---
         if (!firebaseConfig || !firebaseConfig.projectId) {
@@ -117,7 +117,7 @@
 
         .container {
             width: 100%;
-            max-width: 1100px;
+            max-width: 95%; /* ★★★ 加寬至 95% */
             background: var(--card-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -129,6 +129,7 @@
             position: relative;
             display: flex;
             flex-direction: column;
+            min-height: 90vh; /* 確保高度 */
         }
 
         /* 橫幅圖片區域 */
@@ -184,6 +185,15 @@
             background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
             padding: 20px 30px;
             pointer-events: none;
+            display: flex; 
+            align-items: center;
+        }
+
+        /* Mobile Hamburger Button */
+        .mobile-nav-toggle {
+            display: none; /* 預設電腦版隱藏 */
+            font-size: 1.5rem; color: white; background: rgba(0,0,0,0.3);
+            border: none; border-radius: 8px; padding: 5px 10px; cursor: pointer; margin-right: 15px; pointer-events: auto;
         }
 
         h1 {
@@ -220,13 +230,13 @@
         /* 內容區塊佈局 */
         .content-wrapper {
             display: flex;
-            min-height: 600px;
+            flex: 1; /* 填滿剩餘高度 */
             position: relative;
         }
 
         /* 左側導覽列 */
         .sidebar {
-            width: 160px;
+            width: 160px; /* ★★★ 加寬側邊欄 */
             background: var(--sidebar-bg);
             border-right: 1px solid rgba(0,0,0,0.05);
             padding: 20px 0;
@@ -235,6 +245,14 @@
             gap: 5px;
             flex-shrink: 0;
             overflow-y: auto; 
+            height: 100%; /* 確保高度 */
+            z-index: 100;
+        }
+
+        /* Mobile Overlay */
+        .sidebar-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 99;
         }
 
         /* 側邊欄按鈕容器 - 用於 Sortable */
@@ -246,8 +264,8 @@
         }
 
         .sidebar-btn {
-            padding: 12px 0;
-            text-align: center;
+            padding: 12px 15px; /* 增加 padding */
+            text-align: left; /* 改為靠左 */
             cursor: pointer;
             font-weight: 600;
             color: var(--sub-text);
@@ -256,7 +274,7 @@
             background: transparent;
             width: 100%;
             font-family: inherit;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             position: relative;
             user-select: none; 
             cursor: grab; 
@@ -294,6 +312,7 @@
             margin-bottom: 5px;
         }
 
+        /* 側邊欄拖曳時的幽靈樣式 */
         .sidebar-sortable-ghost {
             opacity: 0.4;
             background: #dfe6e9;
@@ -307,28 +326,30 @@
             z-index: 999;
         }
 
+        /* 功能按鈕區 */
         .sidebar-controls {
+            margin-top: auto; /* 推到底部 (如果 sidebar 有 height) */
             margin-top: 20px;
-            padding: 0 10px;
+            padding: 15px 10px;
             display: flex;
             flex-direction: column;
             gap: 10px;
             align-items: center;
             border-top: 1px solid rgba(0,0,0,0.05);
-            padding-top: 15px;
+            background: rgba(255,255,255,0.5); /* 稍微反白 */
         }
 
         .day-controls {
             display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 5px;
+            justify-content: space-between;
+            gap: 5px;
+            width: 100%;
         }
 
         .control-btn {
-            width: 32px;
+            flex: 1;
             height: 32px;
-            border-radius: 50%;
+            border-radius: 8px;
             border: 1px solid #ddd;
             background: #fff;
             color: var(--sub-text);
@@ -347,18 +368,19 @@
             transform: scale(1.1);
         }
 
+        /* 按鈕共用樣式 */
         .action-btn {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             border-radius: 8px;
             background: #fff;
             border: 1px solid #ddd;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
+            gap: 8px;
             color: var(--sub-text);
             transition: all 0.2s;
         }
@@ -368,6 +390,7 @@
             color: #2d3436;
         }
         
+        /* 分享按鈕 */
         .share-btn {
             background: #e3f2fd;
             border-color: #bbdefb;
@@ -380,6 +403,7 @@
             border-color: #2196f3;
         }
         
+        /* 新行程按鈕 */
         .new-trip-btn {
             background: #6c5ce7;
             color: white;
@@ -397,6 +421,7 @@
         }
         .trip-list-btn:hover { background: #81ecec; border-color: #81ecec; color: white; }
 
+        /* 鎖定按鈕 */
         .lock-btn:hover { background: #f1f2f6; }
         .lock-btn.active {
             background: #fff3e0;
@@ -405,6 +430,7 @@
             font-weight: bold;
         }
 
+        /* 清除按鈕 */
         .clear-btn {
             background: #fff0f0;
             border-color: #ffcccc;
@@ -416,6 +442,7 @@
             border-color: var(--danger-color);
         }
 
+        /* 重置按鈕 */
         .reset-btn {
             background: #f0f0f0;
             border-color: #ddd;
@@ -436,54 +463,57 @@
             overflow-y: hidden; /* 防止雙重捲軸 */
             display: flex;
             flex-direction: column;
+            min-width: 0;
         }
 
         /* 新增：內部 Flex 容器，分左右兩欄 */
         .main-panel-content {
             display: flex;
             gap: 20px;
-            height: 100%;
+            flex: 1;
             overflow: hidden;
             min-height: 500px;
         }
 
         /* 左邊：行程列表 */
         .timeline-wrapper {
-            flex: 1;
+            flex: 1.2; /* 給多一點空間 */
             overflow-y: auto;
             padding-right: 5px;
-            min-width: 0; /* 防止 Flex 子元素溢出 */
+            min-width: 300px;
         }
 
         /* 右邊：地圖容器 */
         .map-container {
-            flex: 1;
-            min-width: 350px;
-            display: flex;
+            flex: 0.8;
+            min-width: 300px;
+            display: flex; /* 確保內容垂直排列 */
             flex-direction: column;
             gap: 10px;
             background: #fff;
             padding: 10px;
             border-radius: 16px;
             border: 1px solid rgba(0,0,0,0.05);
-            height: calc(100vh - 250px); /* 讓地圖高度適中 */
+            height: 100%; 
             position: sticky; /* 讓地圖固定 */
             top: 0;
+            /* ★★★ 預設隱藏地圖區塊 ★★★ */
+            display: none; 
         }
 
         .map-frame {
             flex: 1;
             width: 100%;
             border-radius: 12px;
-            background: #eee;
+            background: #f0f2f5;
             border: none;
         }
-
+        
         .map-btn {
             background: #3498db;
             color: white;
             border: none;
-            padding: 8px;
+            padding: 10px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
@@ -492,6 +522,29 @@
         }
         .map-btn:hover { background: #2980b9; }
 
+        /* 新增：關閉地圖按鈕 */
+        .close-map-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .close-map-btn:hover {
+            background: rgba(0,0,0,0.7);
+        }
+
+        /* 輸入區塊 */
         .input-group {
             background: #fff;
             padding: 15px;
@@ -518,44 +571,81 @@
         }
 
         select#dayInput { flex: 0 0 90px; }
-        input[type="text"] { flex: 1; min-width: 120px; }
-        button.add-btn { background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        select#tagInput { flex: 0 0 130px; } 
+        input[type="time"] { flex: 0 0 100px; }
+        input[type="text"] { flex: 1; min-width: 150px; }
 
+        input:focus, select:focus {
+            border-color: var(--accent-color);
+            background: #fff;
+        }
+
+        button.add-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.add-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        /* 行程列表 */
         .day-section { margin-bottom: 30px; }
-        .day-header { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #eee; display: flex; align-items: center; }
-        .day-badge { background: var(--text-color); color: #fff; padding: 3px 10px; border-radius: 6px; font-size: 0.8rem; margin-right: 10px; }
+        .day-header { font-size: 1.2rem; font-weight: 700; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #eee; display: flex; align-items: center; }
+        .day-badge { background: var(--text-color); color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 0.9rem; margin-right: 10px; }
         
-        .plan-item { background: #fff; margin-bottom: 12px; padding: 12px; border-radius: 12px; display: flex; flex-direction: column; border: 1px solid transparent; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: all 0.2s; cursor: grab; }
+        .plan-item { background: #fff; margin-bottom: 12px; padding: 15px; border-radius: 12px; display: flex; flex-direction: column; border: 1px solid transparent; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: all 0.2s; cursor: grab; position: relative; }
         .plan-item:hover { border-color: var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .plan-main { display: flex; align-items: center; gap: 15px; width: 100%; }
+        .plan-main { display: flex; align-items: flex-start; gap: 15px; width: 100%; }
         /* ★★★ 新增：點擊效果樣式 ★★★ */
         .plan-content { flex: 1; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: opacity 0.2s; }
         .plan-content:hover { opacity: 0.7; }
         
-        .img-container { width: 80px; height: 80px; flex-shrink: 0; margin-left: auto; position: relative; cursor: pointer; }
-        .plan-img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; background: #eee; }
-        .img-placeholder { width: 100%; height: 100%; border-radius: 10px; background: #f1f2f6; border: 2px dashed #d1d8e0; display: flex; align-items: center; justify-content: center; color: #a4b0be; font-size: 0.8rem; }
+        .img-container { width: 90px; height: 90px; flex-shrink: 0; margin-left: auto; position: relative; cursor: pointer; border-radius: 10px; overflow: hidden; }
+        .plan-img { width: 100%; height: 100%; object-fit: cover; background: #eee; }
+        .img-placeholder { width: 100%; height: 100%; background: #f1f2f6; border: 2px dashed #d1d8e0; display: flex; align-items: center; justify-content: center; color: #a4b0be; font-size: 0.8rem; box-sizing: border-box; }
         .img-container:hover .edit-hint { opacity: 1; }
         .edit-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; opacity: 0; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+        .img-container:hover .plan-img { filter: brightness(0.8); }
+        .img-container:hover .img-placeholder { border-color: var(--accent-color); color: var(--accent-color); background: #fff; }
 
-        .plan-time { font-weight: 600; color: var(--accent-color); font-size: 0.85rem; margin-bottom: 4px; display: inline-block; }
-        .editable-text { padding: 2px 4px; border-radius: 4px; }
-        .delete-btn { background: none; border: none; color: #dfe6e9; cursor: pointer; font-size: 1.2rem; }
-        .delete-btn:hover { color: #d63031; }
-        
-        .tag-base { padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
+        .plan-time { font-weight: 800; color: var(--accent-color); font-size: 1rem; margin-bottom: 5px; display: inline-block; cursor: pointer; }
+        .plan-details h3 { margin: 0 0 8px 0; font-size: 1.1rem; line-height: 1.4; color: var(--text-color); cursor: pointer; }
+        .plan-details h3:hover { color: var(--accent-color); }
+
+        .plan-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .tag-base { padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
         .tag-flight { background-color: #e3f2fd; color: #1565c0; }
         .tag-hotel { background-color: #e8f5e9; color: #2e7d32; }
         .tag-food { background-color: #fff3e0; color: #e67e22; }
         .tag-sightseeing { background-color: #e0f7fa; color: #0097a7; }
-        .tag-none { border: 1px dashed #ccc; color: #999; font-size: 0.7rem; padding: 1px 5px; }
+        .tag-none { border: 1px dashed #ccc; color: #999; font-size: 0.75rem; padding: 2px 6px; }
 
-        .plan-meta { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
-        .note-toggle-btn { background: none; border: 1px solid #eee; border-radius: 12px; padding: 2px 8px; font-size: 0.75rem; color: #b2bec3; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+        .map-trigger-btn {
+            background: none; border: 1px solid #dcdde1; color: #7f8c8d;
+            border-radius: 12px; padding: 3px 10px; font-size: 0.8rem; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;
+        }
+        .map-trigger-btn:hover { background: #f0f2f5; color: #e74c3c; border-color: #e74c3c; }
+
+        .note-toggle-btn { background: none; border: 1px solid #eee; border-radius: 12px; padding: 3px 10px; font-size: 0.8rem; color: #b2bec3; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+        .note-toggle-btn:hover { background: #f1f2f6; color: var(--accent-color); }
         .note-toggle-btn.has-note { color: var(--accent-color); border-color: rgba(9, 132, 227, 0.2); }
-        .plan-note-area { width: 100%; display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #f1f2f6; }
-        .note-textarea { width: 100%; min-height: 60px; padding: 10px; border: 1px solid #dfe6e9; border-radius: 8px; background: #fafafa; outline: none; }
+        
+        .delete-btn { background: none; border: none; color: #dfe6e9; cursor: pointer; font-size: 1.4rem; padding: 0 0 0 10px; align-self: flex-start; }
+        .delete-btn:hover { color: #d63031; }
 
+        .plan-note-area { width: 100%; display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #f1f2f6; }
+        .note-textarea { width: 100%; min-height: 60px; padding: 10px; border: 1px solid #dfe6e9; border-radius: 8px; background: #fafafa; outline: none; box-sizing: border-box; }
+
+        /* Modal & List */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); justify-content: center; align-items: center; }
         img.modal-content { max-width: 90%; max-height: 90vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         .modal-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; cursor: pointer; font-weight: bold; }
@@ -569,20 +659,49 @@
         .modal-box { background: white; width: 90%; max-width: 500px; border-radius: 12px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-header { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
 
+        /* Locked Mode */
         body.locked-mode .input-group, body.locked-mode .delete-btn, body.locked-mode .day-controls, body.locked-mode .clear-btn, body.locked-mode .reset-btn, body.locked-mode .new-trip-btn { display: none; }
         body.locked-mode .img-container.img-empty { opacity: 0 !important; pointer-events: none; }
         body.locked-mode .banner-edit-hint { display: none; }
         body.locked-mode .note-toggle-btn:not(.has-note) { display: none; }
+        
+        body.locked-mode .editable-text { pointer-events: none; }
+        body.locked-mode .editable-text::after { display: none; }
+        body.locked-mode .plan-time { pointer-events: none; } 
+        body.locked-mode .tag-base { pointer-events: none; opacity: 1; } 
+        body.locked-mode .plan-item { cursor: default; }
+        body.locked-mode .sidebar-btn { cursor: pointer; } 
+        body.locked-mode .img-container { cursor: zoom-in; }
+        body.locked-mode .edit-hint { display: none; }
+        body.locked-mode .note-textarea { border: none; background: transparent; resize: none; padding: 5px 0; color: #2d3436; pointer-events: none; }
 
+        /* RWD Mobile Styles */
         @media (max-width: 800px) {
-            .main-panel-content { flex-direction: column-reverse; }
-            .map-container { height: 250px; position: static; margin-bottom: 20px; }
-            .content-wrapper { flex-direction: column; }
-            .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; }
-            #daySidebarList { flex-direction: row; }
-            .sidebar-controls { flex-direction: row; border-left: 1px solid #eee; padding-left: 10px; margin-top: 0; padding-top: 0; border-top: none; }
-            .action-btn { width: auto; font-size: 1rem; padding: 5px 10px; }
-            .sidebar-btn { width: auto; padding: 8px 15px; white-space: nowrap; }
+            body { padding: 10px; }
+            .container { height: 100vh; border-radius: 0; border: none; max-width: 100%; }
+            .banner { height: 120px; }
+            .banner-overlay h1 { font-size: 1.5rem; }
+            .mobile-nav-toggle { display: block; }
+            
+            /* Mobile Sidebar (Off-canvas) */
+            .sidebar { 
+                position: fixed; left: -280px; top: 0; bottom: 0; width: 280px; 
+                background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.1); 
+                transition: left 0.3s ease; padding-top: 60px;
+            }
+            .sidebar.active { left: 0; }
+            .sidebar-overlay.active { display: block; }
+
+            .main-panel { padding: 15px; overflow-y: auto; }
+            .main-panel-content { flex-direction: column-reverse; display: block; overflow: visible; }
+            .timeline-wrapper { overflow: visible; }
+            
+            /* Mobile Map */
+            .map-container { 
+                height: 200px; margin-bottom: 20px; width: 100%; 
+                position: relative; top: 0; z-index: 1; display: none; /* Mobile also hidden by default */
+            }
+            /* When map is active on mobile, it should show */
         }
     </style>
 </head>
@@ -595,11 +714,15 @@
 
 <div id="toast">已複製分享連結！</div>
 
+<!-- Mobile Sidebar Backdrop -->
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
 <div class="container">
     <div class="banner" onclick="editBanner()" title="點擊更換封面圖片">
         <img id="bannerImg" src="https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=1000&auto=format&fit=crop" alt="Iceland Landscape">
         <div class="banner-edit-hint">📷 更換封面</div>
         <div class="banner-overlay">
+            <button class="mobile-nav-toggle" onclick="event.stopPropagation(); toggleSidebar()">☰</button>
             <h1 id="mainTitle" onclick="editTitle(event)" title="點擊修改標題">Travel Vibe ✈️</h1>
         </div>
     </div>
@@ -643,9 +766,13 @@
             </div>
             
             <div class="main-panel-content">
+                <!-- 左側：行程列表 -->
                 <div id="timeline-container" class="timeline-wrapper"></div>
-                <div class="map-container">
-                    <button class="map-btn" onclick="openFullMapRoute()">🗺️ 開啟 Google Maps 完整路線</button>
+                
+                <!-- 右側：地圖 (預設隱藏) -->
+                <div id="mapContainer" class="map-container" style="display: none;">
+                    <button class="close-map-btn" onclick="closeMap()" title="關閉地圖">&times;</button>
+                    <button class="map-btn" onclick="openFullMapRoute()">🗺️ 開啟完整路線 (Google Maps)</button>
                     <iframe id="googleMapFrame" class="map-frame" src="about:blank" loading="lazy"></iframe>
                 </div>
             </div>
@@ -678,46 +805,11 @@
     const DEFAULT_TITLE = "我的旅遊計畫 ✈️"; 
     const DEFAULT_BANNER = "https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=1000&auto=format&fit=crop";
     
+    // 預設行程資料
     const defaultItinerary = [
-       { id: 101, day: 1, time: "08:00", activity: "TPE ✈️ HKG (國泰 CX477/495)", tag: "flight", image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=200&h=200&fit=crop", note: "記得提早2小時到機場報到" },
-       { id: 102, day: 1, time: "14:55", activity: "HKG 轉機 (中轉歐洲)", tag: "flight", image: "https://images.unsplash.com/photo-1542296332-2e44a996aa0d?w=200&h=200&fit=crop" },
-       { id: 103, day: 1, time: "18:00", activity: "抵達冰島 KEF 機場 & 取車", tag: "flight", image: "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=200&h=200&fit=crop" },
-       { id: 104, day: 1, time: "19:30", activity: "住宿：Odinsve Hotel", tag: "hotel", image: "https://images.unsplash.com/photo-1596425318727-2c18510842e3?w=200&h=200&fit=crop" },
-       { id: 105, day: 1, time: "20:00", activity: "Bonus 小豬超市 & Outlet", image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=200&h=200&fit=crop" },
-       { id: 106, day: 1, time: "21:00", activity: "晚餐：Íslenski barinn (燉羊腿)", tag: "food", image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=200&h=200&fit=crop" },
-       { id: 201, day: 2, time: "09:00", activity: "Bæjarins Beztu Pylsur (熱狗堡)", tag: "food", image: "https://images.unsplash.com/photo-1612392166886-ee8475b03af2?w=200&h=200&fit=crop" },
-       { id: 202, day: 2, time: "11:00", activity: "Skógafoss 史可加瀑布", tag: "sightseeing", image: "https://images.unsplash.com/photo-1520690214124-2405c5217036?w=200&h=200&fit=crop" },
-       { id: 203, day: 2, time: "13:30", activity: "Reynisfjara 黑沙灘", tag: "sightseeing", image: "https://images.unsplash.com/photo-1508138221679-760a23a2285b?w=200&h=200&fit=crop" },
-       { id: 204, day: 2, time: "15:00", activity: "午點：The Soup Company (熔岩湯)", tag: "food", image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=200&h=200&fit=crop" },
-       { id: 205, day: 2, time: "18:00", activity: "住宿：The Milk Factory", tag: "hotel", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=200&h=200&fit=crop" },
-       { id: 206, day: 2, time: "19:30", activity: "晚餐：Kaffi Hornid", tag: "food", image: "https://images.unsplash.com/photo-1550966871-3ed3c47e2ce2?w=200&h=200&fit=crop" },
-       { id: 301, day: 3, time: "08:30", activity: "牛奶工廠早餐 & 出發", tag: "food", image: "https://images.unsplash.com/photo-1533089862017-ec329abb0511?w=200&h=200&fit=crop" },
-       { id: 302, day: 3, time: "10:00", activity: "📍 冰河湖藍洞之旅 (Blue Ice Cave)", tag: "sightseeing", image: "https://images.unsplash.com/photo-1490735891913-40897cdaafd1?w=200&h=200&fit=crop" },
-       { id: 303, day: 3, time: "13:00", activity: "午餐：當地小攤販", tag: "food", image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=200&h=200&fit=crop" },
-       { id: 304, day: 3, time: "14:30", activity: "Jökulsárlón 冰河湖散步", tag: "sightseeing", image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&h=200&fit=crop" },
-       { id: 305, day: 3, time: "18:00", activity: "晚餐：Pakkhús (必吃龍蝦餐 🦞)", tag: "food", image: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=200&h=200&fit=crop" },
-       { id: 306, day: 3, time: "20:00", activity: "住宿：The Milk Factory (看極光!)", tag: "hotel", image: "https://images.unsplash.com/photo-1483347752467-85239967961c?w=200&h=200&fit=crop" },
-       { id: 401, day: 4, time: "09:00", activity: "早餐 & Check-out", image: "https://images.unsplash.com/photo-1493770348161-369560ae357d?w=200&h=200&fit=crop" },
-       { id: 402, day: 4, time: "11:00", activity: "Fjaðrárgljúfur 羽毛河峽谷", tag: "sightseeing", image: "https://images.unsplash.com/photo-1504829857797-ddff29c27927?w=200&h=200&fit=crop" },
-       { id: 403, day: 4, time: "14:00", activity: "Seljalandsfoss 水簾洞瀑布", tag: "sightseeing", image: "https://images.unsplash.com/photo-1533423793766-26156e54589d?w=200&h=200&fit=crop" },
-       { id: 404, day: 4, time: "17:00", activity: "住宿：Audur Guesthouse", tag: "hotel", image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=200&h=200&fit=crop" },
-       { id: 405, day: 4, time: "19:00", activity: "晚餐：Icelandic Street Food (麵包湯)", tag: "food", image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=200&h=200&fit=crop" },
-       { id: 501, day: 5, time: "09:30", activity: "黃金圈一日遊 (Golden Circle)", tag: "sightseeing", image: "https://images.unsplash.com/photo-1476610182048-b716b8518aae?w=200&h=200&fit=crop" },
-       { id: 502, day: 5, time: "15:00", activity: "Blue Lagoon 藍湖溫泉 ♨️", tag: "sightseeing", image: "https://images.unsplash.com/photo-1533285785082-d2789182d334?w=200&h=200&fit=crop" },
-       { id: 503, day: 5, time: "19:00", activity: "晚餐：Seabaron (烤肉串/龍蝦湯)", tag: "food", image: "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=200&h=200&fit=crop" },
-       { id: 504, day: 5, time: "21:00", activity: "住宿：Audur Guesthouse", tag: "hotel", image: "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=200&h=200&fit=crop" },
-       { id: 601, day: 6, time: "10:00", activity: "雷克雅維克大教堂", tag: "sightseeing", image: "https://images.unsplash.com/photo-1555543714-36528d228c29?w=200&h=200&fit=crop" },
-       { id: 602, day: 6, time: "12:00", activity: "午餐：市區熱狗攤", tag: "food", image: "https://images.unsplash.com/photo-1620898583487-160e1d156161?w=200&h=200&fit=crop" },
-       { id: 603, day: 6, time: "14:00", activity: "Sky Lagoon 天空之湖", tag: "sightseeing", image: "https://images.unsplash.com/photo-1515658323427-4b5314eb4e13?w=200&h=200&fit=crop" },
-       { id: 604, day: 6, time: "17:00", activity: "教堂山 (Kirkjufell) / 看海豹", tag: "sightseeing", image: "https://images.unsplash.com/photo-1504893524553-bfe206dd8e96?w=200&h=200&fit=crop" },
-       { id: 605, day: 6, time: "20:00", activity: "晚餐：沒東西吃各自保命 😂", tag: "food", image: "https://images.unsplash.com/photo-1465311440653-ba3208f4c759?w=200&h=200&fit=crop" },
-       { id: 606, day: 6, time: "22:00", activity: "住宿：Audur Guesthouse", tag: "hotel", image: "https://images.unsplash.com/photo-1482355347028-ff6de45d0117?w=200&h=200&fit=crop" },
-       { id: 701, day: 7, time: "09:00", activity: "整理行李 & 退房", image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=200&h=200&fit=crop" },
-       { id: 702, day: 7, time: "11:00", activity: "前往機場還車", image: "https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?w=200&h=200&fit=crop" },
-       { id: 703, day: 7, time: "14:00", activity: "KEF ✈️ HKG (回程航班)", tag: "flight", image: "https://images.unsplash.com/photo-1542296332-2e44a996aa0d?w=200&h=200&fit=crop" },
-       { id: 704, day: 7, time: "23:55", activity: "機上休息 / 轉機", image: "https://images.unsplash.com/photo-1527634311077-9943f7be34e6?w=200&h=200&fit=crop" },
-       { id: 801, day: 8, time: "18:00", activity: "抵達香港 HKG 轉機回台灣", tag: "flight", image: "https://images.unsplash.com/photo-1506318164473-2dfd3ede3623?w=200&h=200&fit=crop" },
-       { id: 802, day: 8, time: "20:30", activity: "抵達台灣溫暖的家 🇹🇼", tag: "flight", image: "https://images.unsplash.com/photo-1509356843151-3e7d96241e11?w=200&h=200&fit=crop" }
+       { id: 101, day: 1, time: "10:00", activity: "抵達機場 & 取車", tag: "flight", image: "", note: "" },
+       { id: 102, day: 1, time: "14:00", activity: "市區觀光", tag: "sightseeing", image: "", note: "" },
+       { id: 201, day: 2, time: "09:00", activity: "前往第一個景點", tag: "sightseeing", image: "", note: "" }
     ];
 
     let appState = {
@@ -745,13 +837,17 @@
         });
     });
 
-    // 實作缺少的 hideLoading 函式
+    // --- Mobile Sidebar Toggle ---
+    function toggleSidebar() {
+        document.querySelector('.sidebar').classList.toggle('active');
+        document.querySelector('.sidebar-overlay').classList.toggle('active');
+    }
+
     function hideLoading() {
         const overlay = document.getElementById('loading-overlay');
         if(overlay) overlay.style.display = 'none';
     }
 
-    // 實作缺少的 updateTripHistory 函式
     function updateTripHistory(id, title) {
         let history = JSON.parse(localStorage.getItem(STORAGE_KEY_TRIPS) || '[]');
         history = history.filter(trip => trip.id !== id);
@@ -773,7 +869,7 @@
         if (!idFromUrl) {
             const history = getTripHistory();
             if (history.length > 0) {
-                idFromUrl = history[0].id; // 取最近一筆
+                idFromUrl = history[0].id;
                 try {
                     const newUrl = `${window.location.pathname}?trip=${idFromUrl}`;
                     window.history.replaceState({path:newUrl}, '', newUrl);
@@ -838,23 +934,27 @@
             console.log("Cloud Saved");
         } catch (e) { 
             console.error("Save Error:", e); 
-            if (e.code === 'permission-denied' || e.message.includes('permissions')) {
-                alert("⚠️ 儲存失敗：權限不足，請檢查 Firebase Rules。");
-            }
         }
     }
 
+    // --- Map Logic ---
     function updateMap(queryOverride) {
+        const container = document.getElementById('mapContainer');
         const frame = document.getElementById('googleMapFrame');
-        let query = queryOverride || appState.title;
-        if (!queryOverride && currentViewDay !== 'all') {
-            const dayPlans = appState.plans.filter(p => p.day == currentViewDay);
-            if (dayPlans.length > 0) {
-                query = dayPlans[0].activity;
-            }
+        
+        if (queryOverride) {
+            container.style.display = 'flex'; // 顯示地圖容器
+            
+            let query = queryOverride.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+            frame.src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
         }
-        query = query.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
-        frame.src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
+    }
+
+    function closeMap() {
+        const container = document.getElementById('mapContainer');
+        const frame = document.getElementById('googleMapFrame');
+        container.style.display = 'none'; // 隱藏地圖容器
+        frame.src = 'about:blank'; // 停止載入，節省資源
     }
 
     function openFullMapRoute() {
@@ -877,121 +977,13 @@
         window.open(mapUrl, '_blank');
     }
 
-    // --- Render Logic ---
     function renderUI() {
         renderHeader();
         renderSidebar();
         renderDaySelect();
         renderAllPlans();
         applyLockState(); 
-        updateMap(); 
-    }
-
-    // ★★★ 補回缺失的 renderHeader 等函式 ★★★
-
-    function renderHeader() {
-        document.getElementById('mainTitle').innerText = appState.title;
-        document.getElementById('bannerImg').src = appState.banner;
-        document.title = appState.title; // 更新頁籤名稱
-    }
-
-    function editTitle(e) {
-        if(isLocked) return;
-        e.stopPropagation();
-        const newTitle = prompt("請輸入新的標題:", appState.title);
-        if (newTitle && newTitle.trim() !== "") {
-            appState.title = newTitle;
-            renderHeader();
-            autoSave();
-        }
-    }
-
-    function editBanner() {
-        if(isLocked) return;
-        const newBanner = prompt("請輸入新的封面圖片網址:", appState.banner);
-        if (newBanner && newBanner.trim() !== "") {
-            appState.banner = newBanner;
-            renderHeader();
-            autoSave();
-        }
-    }
-
-    function switchView(day) {
-        currentViewDay = day;
-        renderSidebar();
-        renderAllPlans();
-        if (day !== 'all') document.getElementById('dayInput').value = day;
-        updateMap(); // 切換天數更新地圖
-    }
-
-    function renderDaySelect() {
-        const select = document.getElementById('dayInput');
-        const currentVal = select.value;
-        select.innerHTML = '';
-        for (let i = 1; i <= appState.totalDays; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = `Day ${i}`;
-            select.appendChild(option);
-        }
-        if (currentVal && currentVal <= appState.totalDays) select.value = currentVal;
-    }
-
-    function changeTotalDays(delta) {
-        if(isLocked) return;
-        const newTotal = appState.totalDays + delta;
-        if (newTotal < 1 || newTotal > 30) return alert("天數請在 1~30 之間");
-        if (delta < 0) {
-            const hasPlans = appState.plans.some(p => p.day === appState.totalDays);
-            if (hasPlans && !confirm(`Day ${appState.totalDays} 還有行程，確定刪除？`)) return;
-            if (hasPlans) appState.plans = appState.plans.filter(p => p.day !== appState.totalDays);
-        }
-        appState.totalDays = newTotal;
-        renderSidebar(); renderDaySelect();
-        if (typeof currentViewDay === 'number' && currentViewDay > appState.totalDays) switchView('all');
-        autoSave();
-    }
-
-    function renderSidebar() {
-        const sidebarList = document.getElementById('daySidebarList');
-        sidebarList.innerHTML = '';
-        if (sidebarSortable) { sidebarSortable.destroy(); sidebarSortable = null; }
-
-        const allBtn = document.getElementById('btn-all');
-        if (currentViewDay === 'all') allBtn.classList.add('active');
-        else allBtn.classList.remove('active');
-
-        for (let i = 1; i <= appState.totalDays; i++) {
-            const btn = document.createElement('button');
-            btn.className = `sidebar-btn ${currentViewDay == i ? 'active' : ''}`;
-            btn.textContent = `Day ${i}`;
-            btn.setAttribute('data-origin-day', i);
-            btn.onclick = () => switchView(i);
-            sidebarList.appendChild(btn);
-        }
-
-        sidebarSortable = new Sortable(sidebarList, {
-            group: 'sidebar-days', animation: 150,
-            ghostClass: 'sidebar-sortable-ghost', dragClass: 'sidebar-sortable-drag',
-            disabled: isLocked, delay: 100, delayOnTouchOnly: true,
-            onEnd: function (evt) { if (evt.oldIndex !== evt.newIndex) reorderDaysFromSidebar(); }
-        });
-    }
-
-    function reorderDaysFromSidebar() {
-        const sidebarList = document.getElementById('daySidebarList');
-        const buttons = Array.from(sidebarList.children);
-        const dayMapping = {};
-        buttons.forEach((btn, index) => {
-            const oldDay = parseInt(btn.getAttribute('data-origin-day'));
-            dayMapping[oldDay] = index + 1;
-        });
-        appState.plans = appState.plans.map(plan => {
-            if (dayMapping[plan.day]) return { ...plan, day: dayMapping[plan.day] };
-            return plan;
-        });
-        if (currentViewDay !== 'all') currentViewDay = dayMapping[currentViewDay];
-        renderSidebar(); renderAllPlans(); autoSave();
+        // 預設地圖不顯示
     }
 
     function renderAllPlans() {
@@ -1024,7 +1016,7 @@
             section.appendChild(listContainer);
             container.appendChild(section);
 
-            if (!isLocked) {
+            if (!isLocked && typeof Sortable !== 'undefined') {
                 const sortable = new Sortable(listContainer, {
                     group: 'shared', animation: 150,
                     ghostClass: 'sortable-ghost', dragClass: 'sortable-drag', handle: '.plan-item',
@@ -1064,14 +1056,16 @@
         const hasNoteClass = (plan.note && plan.note.trim() !== "") ? "has-note" : "";
         const timeTitle = isLocked ? "" : "點擊修改時間";
 
+        // 綁定 updateMap 事件到「📍 地圖」按鈕
         item.innerHTML = `
             <div class="plan-main">
-                <div class="plan-content" onclick="updateMap('${plan.activity.replace(/'/g, "\\'")}')" title="點擊在地圖顯示">
+                <div class="plan-content">
                     <span class="plan-time" onclick="event.stopPropagation(); editTime(${plan.id})" title="${timeTitle}">${plan.time}</span>
                     <div class="plan-details">
                         <h3 class="editable-text" onclick="event.stopPropagation(); editActivity(${plan.id})" title="點擊修改文字">${plan.activity}</h3>
                         <div class="plan-meta">
                             ${tagHtml}
+                            <button class="map-trigger-btn" onclick="event.stopPropagation(); updateMap('${plan.activity.replace(/'/g, "\\'")}')">📍 地圖</button>
                             <button id="note-btn-${plan.id}" class="note-toggle-btn ${hasNoteClass}" onclick="event.stopPropagation(); toggleNote(${plan.id})">📝 備註</button>
                         </div>
                     </div>
@@ -1101,10 +1095,8 @@
         }
         appState.plans = newPlans;
         autoSave();
-        updateMap();
     }
 
-    // --- Actions ---
     function toggleLock() {
         const { ADMIN_PASSWORD } = window.firebaseModules;
         if (!isLocked) { isLocked = true; applyLockState(); return; }
@@ -1145,7 +1137,6 @@
         else renderAllPlans();
         document.getElementById('activityInput').value = '';
         autoSave();
-        updateMap();
     }
 
     function deletePlan(id) {
@@ -1154,7 +1145,6 @@
             appState.plans = appState.plans.filter(p => p.id !== id);
             renderAllPlans();
             autoSave();
-            updateMap();
         }
     }
 
@@ -1165,7 +1155,6 @@
             appState.totalDays = 1;
             renderSidebar(); renderDaySelect(); switchView('all');
             autoSave();
-            updateMap();
         }
     }
 
@@ -1173,16 +1162,12 @@
         if(isLocked) return alert("請先解鎖以建立新行程");
 
         if(confirm("確定要建立一個新的空白行程嗎？\n(將會產生新的網址 ID)")) {
-            // 1. 產生新 ID
             tripId = crypto.randomUUID().substring(0, 8);
-            
-            // 2. 更新網址 (不刷新頁面)
             try {
                 const newUrl = `${window.location.pathname}?trip=${tripId}`;
                 window.history.pushState({path:newUrl}, '', newUrl);
             } catch(e) { console.warn("URL update skipped"); }
             
-            // 3. 設定為「空白狀態」 (比照清除行程)
             appState = {
                 title: "新的旅程", 
                 banner: DEFAULT_BANNER,
@@ -1190,10 +1175,8 @@
                 plans: [] 
             };
             
-            // 4. 重置 UI 狀態
             currentViewDay = 'all';
             
-            // 5. 存檔並渲染
             await saveToCloud(true);
             updateTripHistory(tripId, appState.title);
             renderUI();
@@ -1221,7 +1204,7 @@
         if(isLocked) return;
         const plan = appState.plans.find(p => p.id === id);
         const newTxt = prompt("行程內容:", plan.activity);
-        if (newTxt) { plan.activity = newTxt; renderAllPlans(); autoSave(); updateMap(); } 
+        if (newTxt) { plan.activity = newTxt; renderAllPlans(); autoSave(); } 
     }
 
     function editTag(id) {
@@ -1257,7 +1240,6 @@
             appState.plans = JSON.parse(JSON.stringify(defaultItinerary));
             renderHeader(); renderSidebar(); renderDaySelect(); switchView('all');
             autoSave();
-            updateMap();
         }
     }
 
@@ -1273,6 +1255,88 @@
         } else {
             prompt("複製網址:", url);
         }
+    }
+    
+    // --- Render Helpers (Missing in previous snippet) ---
+    function renderHeader() {
+        document.getElementById('mainTitle').innerText = appState.title;
+        document.getElementById('bannerImg').src = appState.banner;
+        document.title = appState.title; 
+    }
+    function editTitle(e) {
+        if(isLocked) return;
+        e.stopPropagation();
+        const newTitle = prompt("請輸入新的標題:", appState.title);
+        if (newTitle && newTitle.trim() !== "") {
+            appState.title = newTitle; renderHeader(); autoSave();
+        }
+    }
+    function editBanner() {
+        if(isLocked) return;
+        const newBanner = prompt("請輸入新的封面圖片網址:", appState.banner);
+        if (newBanner && newBanner.trim() !== "") {
+            appState.banner = newBanner; renderHeader(); autoSave();
+        }
+    }
+    function switchView(day) {
+        currentViewDay = day;
+        renderSidebar(); renderAllPlans();
+        if (day !== 'all') document.getElementById('dayInput').value = day;
+        // 移除這裡的 updateMap，確保切換天數時不會彈出地圖
+    }
+    function renderDaySelect() {
+        const select = document.getElementById('dayInput');
+        const currentVal = select.value;
+        select.innerHTML = '';
+        for (let i = 1; i <= appState.totalDays; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `Day ${i}`;
+            select.appendChild(option);
+        }
+        if (currentVal && currentVal <= appState.totalDays) select.value = currentVal;
+    }
+    function changeTotalDays(delta) {
+        if(isLocked) return;
+        const newTotal = appState.totalDays + delta;
+        if (newTotal < 1 || newTotal > 30) return alert("天數請在 1~30 之間");
+        if (delta < 0) {
+            const hasPlans = appState.plans.some(p => p.day === appState.totalDays);
+            if (hasPlans && !confirm(`Day ${appState.totalDays} 還有行程，確定刪除？`)) return;
+            if (hasPlans) appState.plans = appState.plans.filter(p => p.day !== appState.totalDays);
+        }
+        appState.totalDays = newTotal;
+        renderSidebar(); renderDaySelect();
+        if (typeof currentViewDay === 'number' && currentViewDay > appState.totalDays) switchView('all');
+        autoSave();
+    }
+    function renderSidebar() {
+        const sidebarList = document.getElementById('daySidebarList');
+        sidebarList.innerHTML = '';
+        if (sidebarSortable) { sidebarSortable.destroy(); sidebarSortable = null; }
+        const allBtn = document.getElementById('btn-all');
+        if (currentViewDay === 'all') allBtn.classList.add('active'); else allBtn.classList.remove('active');
+        for (let i = 1; i <= appState.totalDays; i++) {
+            const btn = document.createElement('button');
+            btn.className = `sidebar-btn ${currentViewDay == i ? 'active' : ''}`;
+            btn.textContent = `Day ${i}`;
+            btn.setAttribute('data-origin-day', i);
+            btn.onclick = () => switchView(i);
+            sidebarList.appendChild(btn);
+        }
+        
+        if (typeof Sortable !== 'undefined') {
+            sidebarSortable = new Sortable(sidebarList, { group: 'sidebar-days', animation: 150, ghostClass: 'sidebar-sortable-ghost', dragClass: 'sidebar-sortable-drag', disabled: isLocked, delay: 100, delayOnTouchOnly: true, onEnd: function (evt) { if (evt.oldIndex !== evt.newIndex) reorderDaysFromSidebar(); } });
+        }
+    }
+    function reorderDaysFromSidebar() {
+        const sidebarList = document.getElementById('daySidebarList');
+        const buttons = Array.from(sidebarList.children);
+        const dayMapping = {};
+        buttons.forEach((btn, index) => { const oldDay = parseInt(btn.getAttribute('data-origin-day')); dayMapping[oldDay] = index + 1; });
+        appState.plans = appState.plans.map(plan => { if (dayMapping[plan.day]) return { ...plan, day: dayMapping[plan.day] }; return plan; });
+        if (currentViewDay !== 'all') currentViewDay = dayMapping[currentViewDay];
+        renderSidebar(); renderAllPlans(); autoSave();
     }
     
     // --- Trip List Logic ---
