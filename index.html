@@ -533,8 +533,15 @@
             
             /* Mobile Map */
             .map-container { 
-                height: 200px; margin-bottom: 20px; width: 100%; 
-                position: relative; top: 0; z-index: 1; display: none; 
+                height: 300px; /* 手機版地圖高度稍大一點比較好操作 */
+                width: calc(100% - 20px); /* 扣除 padding */
+                margin: 10px auto; 
+                position: relative; 
+                top: 0; 
+                z-index: 5; 
+                display: none; 
+                box-sizing: border-box;
+                border: 2px solid var(--accent-color); /* 增加明顯邊框，標示這是當前位置 */
             }
         }
     </style>
@@ -811,15 +818,43 @@
         }
     }
 
-    // --- Map Logic ---
+    // --- Map Logic (支援手機版動態插入) ---
     function updateMap(queryOverride) {
         const container = document.getElementById('mapContainer');
         const frame = document.getElementById('googleMapFrame');
         
         if (queryOverride) {
+            // 1. 處理顯示邏輯
             container.style.display = 'flex'; 
             
+            // 2. RWD 動態位移：如果是手機版，將地圖移動到點擊的那個行程下方
+            if (window.innerWidth <= 800) {
+                // 透過 event.target 找到觸發點擊的 plan-item
+                // 我們需要在 HTML 呼叫處確保 event 被傳遞進來，或者尋找 active 元素
+                // 這裡簡單的做法是：尋找最靠近點擊按鈕的 .plan-item
+                const activeBtn = event.currentTarget; 
+                const planItem = activeBtn.closest('.plan-item');
+                
+                if (planItem) {
+                    // 將地圖容器插入到該行程項目的正後方
+                    planItem.insertAdjacentElement('afterend', container);
+                    
+                    // 自動捲動讓地圖對準畫面中央（選配）
+                    setTimeout(() => {
+                        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                }
+            } else {
+                // 電腦版：放回原本的 main-panel-content 右側
+                const originalParent = document.querySelector('.main-panel-content');
+                if (originalParent) originalParent.appendChild(container);
+            }
+    
+            // 3. 載入 Google Maps 內容
             let query = queryOverride.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+            frame.src = `https://www.google.com/maps/embed/v1/place?key=你的GoogleAPIKey&q=${encodeURIComponent(query)}`;
+            
+            // 注意：如果你沒有 API Key，維持你原本的替代方案：
             frame.src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
         }
     }
@@ -939,7 +974,7 @@
         let mapBtnHtml = '';
         if (plan.address || plan.useAutoSearch) {
              const query = plan.address || plan.activity;
-             mapBtnHtml = `<button class="map-trigger-btn" onclick="event.stopPropagation(); updateMap('${query.replace(/'/g, "\\'")}')">🗺️ 查看地圖</button>`;
+             mapBtnHtml = `<button class="map-trigger-btn" onclick="updateMap('${query.replace(/'/g, "\\'")}')">🗺️ 查看地圖</button>`;
         }
 
         item.innerHTML = `
@@ -1365,5 +1400,6 @@
 </script>
 </body>
 </html>
+
 
 
