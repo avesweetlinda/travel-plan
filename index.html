@@ -32,6 +32,11 @@
         // ==========================================
         const PRESET_TRIP_ID = ""; 
 
+        // ==========================================
+        // ★★★ 3. 管理員密碼 (編輯權限鎖) ★★★
+        // 請設定一個只有你知道的密碼，訪客輸入正確才能編輯
+        // ==========================================
+        const ADMIN_PASSWORD = "MM1234567890"; // ← 改成你想要的密碼
 
         // --- Firebase 初始化邏輯 (包含防呆檢查) ---
         if (!firebaseConfig || !firebaseConfig.projectId) {
@@ -1054,8 +1059,9 @@
     };
 
     let currentViewDay = 'all'; 
-    let isLocked = false; 
-    let sortables = []; 
+    let currentViewDay = 'all'; 
+    let isLocked = true; // ★★★ 改成 true，預設開啟即鎖定
+    let sortables = [];
     let sidebarSortable = null;
 
     // --- 啟動與 Firebase 連線 ---
@@ -1161,6 +1167,7 @@
         renderSidebar();
         renderDaySelect();
         renderAllPlans();
+        applyLockState();
     }
 
     // --- Header ---
@@ -1453,7 +1460,32 @@
     // --- Actions ---
 
     function toggleLock() {
-        isLocked = !isLocked;
+        const body = document.body;
+        const lockBtn = document.getElementById('lockBtn');
+        const lockIcon = document.getElementById('lockIcon');
+        const lockText = document.getElementById('lockText');
+
+        // 如果目前是「解鎖(編輯)」狀態，點擊後直接鎖定 (不需要密碼)
+        if (!isLocked) {
+            isLocked = true;
+            applyLockState();
+            return;
+        }
+
+        // 如果目前是「鎖定(唯讀)」狀態，點擊後要求輸入密碼
+        const input = prompt("🔒 請輸入管理員密碼以啟用編輯模式：");
+        
+        if (input === ADMIN_PASSWORD) {
+            isLocked = false;
+            applyLockState();
+            showToast("🔓 編輯模式已啟用");
+        } else if (input !== null) {
+            alert("❌ 密碼錯誤，您僅能瀏覽此行程。");
+        }
+    }
+
+    // 將鎖定狀態應用到 UI 的輔助函式
+    function applyLockState() {
         const body = document.body;
         const lockBtn = document.getElementById('lockBtn');
         const lockIcon = document.getElementById('lockIcon');
@@ -1463,15 +1495,24 @@
             body.classList.add('locked-mode');
             lockBtn.classList.add('active');
             lockIcon.textContent = '🔒';
-            lockText.textContent = '已鎖定';
+            lockText.textContent = '檢視中 (唯讀)'; // 改個文字讓訪客知道
+            
+            // 禁用側邊欄拖曳
             if (sidebarSortable) sidebarSortable.option("disabled", true);
+            // 禁用行程拖曳
+            if (sortables) sortables.forEach(s => s.option("disabled", true));
         } else {
             body.classList.remove('locked-mode');
             lockBtn.classList.remove('active');
             lockIcon.textContent = '🔓';
             lockText.textContent = '編輯中';
+            
+            // 啟用拖曳
             if (sidebarSortable) sidebarSortable.option("disabled", false);
+            if (sortables) sortables.forEach(s => s.option("disabled", false));
         }
+        
+        // 重新渲染以更新介面細節
         renderAllPlans();
     }
 
@@ -1636,4 +1677,5 @@
 
 </script>
 </body>
+
 </html>
