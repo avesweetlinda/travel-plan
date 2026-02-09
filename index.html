@@ -29,13 +29,23 @@
             measurementId: "G-7QWLJ42T9W"
         };
 
+        // ==========================================
+        // ★★★ 2. 固定行程 ID (選填) ★★★
+        // ==========================================
         const PRESET_TRIP_ID = ""; 
+
+        // ==========================================
+        // ★★★ 3. 管理員密碼 (編輯權限鎖) ★★★
+        // ==========================================
         const ADMIN_PASSWORD = "MM1234567890"; 
 
+        // --- Firebase 初始化邏輯 ---
         if (!firebaseConfig || !firebaseConfig.projectId) {
             document.addEventListener('DOMContentLoaded', () => {
                 const overlay = document.getElementById('loading-overlay');
-                if(overlay) overlay.innerHTML = `<div style="background:white;padding:30px;"><h2>尚未設定 Firebase</h2></div>`;
+                if(overlay) {
+                    overlay.innerHTML = `<div style="background:white;padding:30px;border-radius:12px;text-align:center;"><h2>尚未設定 Firebase</h2><p>請編輯 HTML 檔案填入設定。</p></div>`;
+                }
             });
             throw new Error("Firebase Config is missing");
         }
@@ -62,7 +72,8 @@
             --accent-hover: #74b9ff;
             --sub-text: #636e72;
             --input-bg: #f5f6fa;
-            --sidebar-bg: rgba(241, 242, 246, 0.95);
+            /* 修正 Sidebar 背景色為純白，避免色差 */
+            --sidebar-bg: #ffffff;
             --danger-color: #d63031;
             --warning-color: #f39c12;
             --info-color: #00cec9;
@@ -96,7 +107,7 @@
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* Toast */
+        /* Toast Notification */
         #toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.8); color: white; padding: 10px 25px;
@@ -107,7 +118,7 @@
 
         .container {
             width: 100%;
-            max-width: 98%; /* 寬版設計 */
+            max-width: 98%;
             background: var(--card-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -122,65 +133,279 @@
             min-height: 95vh;
         }
 
-        .banner { width: 100%; height: 180px; position: relative; overflow: hidden; cursor: pointer; }
-        .banner img { width: 100%; height: 100%; object-fit: cover; transition: transform 10s ease, filter 0.3s; }
-        .banner:hover img { transform: scale(1.05); filter: brightness(0.8); }
-        .banner-edit-hint { position: absolute; top: 15px; right: 15px; background: rgba(0, 0, 0, 0.5); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-        .banner:hover .banner-edit-hint { opacity: 1; }
-        .banner-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent); padding: 20px 30px; pointer-events: none; display: flex; align-items: center; }
+        /* 橫幅圖片區域 */
+        .banner {
+            width: 100%;
+            height: 180px;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+            cursor: pointer;
+            group: banner;
+        }
 
+        .banner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 10s ease, filter 0.3s;
+        }
+        
+        .banner:hover img {
+            transform: scale(1.05);
+            filter: brightness(0.8);
+        }
+
+        /* 封面編輯提示 */
+        .banner-edit-hint {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .banner:hover .banner-edit-hint {
+            opacity: 1;
+        }
+
+        .banner-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            padding: 20px 30px;
+            pointer-events: none;
+            display: flex; 
+            align-items: center;
+        }
+
+        /* Mobile Hamburger Button */
         .mobile-nav-toggle {
             display: none; font-size: 1.5rem; color: white; background: rgba(0,0,0,0.3);
             border: none; border-radius: 8px; padding: 5px 10px; cursor: pointer; margin-right: 15px; pointer-events: auto;
         }
 
-        h1 { font-weight: 800; font-size: 2rem; margin: 0; color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,0.3); pointer-events: auto; cursor: pointer; display: inline-block; padding: 2px 10px; border-radius: 8px; }
-        h1:hover { background: rgba(255, 255, 255, 0.2); }
-        h1::after { content: '✎'; font-size: 1.2rem; margin-left: 10px; opacity: 0; transition: opacity 0.2s; }
+        h1 {
+            font-weight: 800;
+            font-size: 2rem;
+            margin: 0;
+            color: #fff;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            letter-spacing: 1px;
+            pointer-events: auto;
+            cursor: pointer;
+            display: inline-block;
+            transition: all 0.2s;
+            padding: 2px 10px;
+            border-radius: 8px;
+        }
+
+        h1:hover {
+            background: rgba(255, 255, 255, 0.2);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        h1::after {
+            content: '✎';
+            font-size: 1.2rem;
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            vertical-align: middle;
+        }
+
         h1:hover::after { opacity: 1; }
 
-        .content-wrapper { display: flex; flex: 1; position: relative; }
-        
-        .sidebar { width: 160px; background: var(--sidebar-bg); border-right: 1px solid rgba(0,0,0,0.05); padding: 20px 0; display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; overflow-y: auto; height: 100%; z-index: 100; }
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+        /* 內容區塊佈局 */
+        .content-wrapper {
+            display: flex;
+            flex: 1; /* 填滿剩餘高度 */
+            position: relative;
+        }
 
-        #daySidebarList { display: flex; flex-direction: column; gap: 5px; width: 100%; }
-        .sidebar-btn { padding: 12px 15px; text-align: left; cursor: pointer; font-weight: 600; color: var(--sub-text); border: none; background: transparent; width: 100%; transition: all 0.2s; position: relative; font-size: 0.95rem; user-select: none; cursor: grab; }
+        /* 左側導覽列 */
+        .sidebar {
+            width: 180px; /* 稍微加寬 */
+            background: var(--sidebar-bg);
+            border-right: 1px solid rgba(0,0,0,0.05);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex-shrink: 0;
+            overflow-y: auto; 
+            height: 100%; /* 確保高度 */
+            z-index: 100;
+        }
+
+        /* Mobile Overlay */
+        .sidebar-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 99;
+        }
+
+        /* 側邊欄按鈕容器 */
+        #daySidebarList {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .sidebar-btn {
+            padding: 12px 15px; text-align: left; cursor: pointer; font-weight: 600; color: var(--sub-text); border: none; background: transparent; width: 100%; transition: all 0.2s; position: relative; font-size: 0.95rem; user-select: none; cursor: grab; 
+        }
+
         .sidebar-btn:active { cursor: grabbing; }
-        .sidebar-btn:hover { color: var(--accent-color); background: rgba(255,255,255,0.5); }
-        .sidebar-btn.active { background: #fff; color: var(--accent-color); font-weight: 800; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .sidebar-btn.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent-color); }
+        .sidebar-btn:hover { color: var(--accent-color); background: rgba(245, 246, 250, 1); }
+
+        .sidebar-btn.active {
+            background: #f0f3f5; /* 淡灰色背景，更柔和 */
+            color: var(--accent-color);
+            font-weight: 800;
+            border-left: 4px solid var(--accent-color);
+        }
+        
         .sidebar-btn.static-btn { cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05); margin-bottom: 5px; }
 
         .sidebar-sortable-ghost { opacity: 0.4; background: #dfe6e9; border: 1px dashed #b2bec3; }
         .sidebar-sortable-drag { background: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.1); transform: scale(1.05); z-index: 999; }
 
-        .sidebar-controls { margin-top: auto; margin-top: 20px; padding: 15px 10px; display: flex; flex-direction: column; gap: 10px; align-items: center; border-top: 1px solid rgba(0,0,0,0.05); background: rgba(255,255,255,0.5); }
-        .day-controls { display: flex; justify-content: space-between; gap: 5px; width: 100%; }
-        .control-btn { flex: 1; height: 32px; border-radius: 8px; border: 1px solid #ddd; background: #fff; color: var(--sub-text); cursor: pointer; font-weight: bold; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        /* 功能按鈕區 */
+        .sidebar-controls {
+            margin-top: auto; 
+            margin-top: 20px;
+            padding: 15px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            /* 移除額外的背景色，讓視覺統一 */
+            background: transparent; 
+        }
+
+        .day-controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .control-btn {
+            flex: 1;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: #fff;
+            color: var(--sub-text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
         .control-btn:hover { border-color: var(--accent-color); color: var(--accent-color); transform: scale(1.1); }
 
-        .action-btn { width: 100%; padding: 10px; border-radius: 8px; background: #fff; border: 1px solid #ddd; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--sub-text); transition: all 0.2s; }
+        .action-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            background: #fff;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--sub-text);
+            transition: all 0.2s;
+        }
         .action-btn:hover { background: #f1f2f6; color: #2d3436; }
+        
         .share-btn { background: #e3f2fd; border-color: #bbdefb; color: #1976d2; font-weight: bold; }
         .share-btn:hover { background: #2196f3; color: white; border-color: #2196f3; }
-        .new-trip-btn { background: #6c5ce7; color: white; border-color: #6c5ce7; font-weight: bold; margin-bottom: 10px; }
+        
+        .new-trip-btn { background: #6c5ce7; color: white; border-color: #6c5ce7; font-weight: bold; margin-bottom: 5px; }
         .new-trip-btn:hover { background: #a29bfe; border-color: #a29bfe; }
+
         .trip-list-btn { background: #00cec9; color: white; border-color: #00cec9; font-weight: bold; }
         .trip-list-btn:hover { background: #81ecec; border-color: #81ecec; }
+
         .lock-btn:hover { background: #f1f2f6; }
         .lock-btn.active { background: #fff3e0; color: #e67e22; border-color: #ffe0b2; font-weight: bold; }
+
         .clear-btn { background: #fff0f0; border-color: #ffcccc; color: var(--danger-color); }
         .clear-btn:hover { background: var(--danger-color); color: white; border-color: var(--danger-color); }
+
         .reset-btn { background: #f0f0f0; border-color: #ddd; color: #636e72; font-size: 0.8rem; }
         .reset-btn:hover { background: #636e72; color: white; border-color: #636e72; }
 
-        .main-panel { flex: 1; padding: 25px; background: rgba(255,255,255,0.4); display: flex; flex-direction: column; overflow-y: hidden; min-width: 0; }
+        /* 手機版嵌入式清單樣式 */
+        .mobile-trip-list {
+            width: 100%;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+        }
+        .mobile-trip-list .trip-item {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.85rem;
+        }
+        .mobile-trip-list .trip-item:last-child { border-bottom: none; }
+
+        /* --- 右側主內容區 (分割佈局) --- */
+        .main-panel {
+            flex: 1;
+            padding: 25px;
+            background: rgba(255,255,255,0.4);
+            overflow-y: hidden; /* 防止雙重捲軸 */
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
         .main-panel-content { display: flex; gap: 20px; flex: 1; overflow: hidden; min-height: 500px; }
         
         .timeline-wrapper { flex: 1.2; overflow-y: auto; padding-right: 5px; min-width: 300px; }
         
-        .map-container { flex: 0.8; min-width: 300px; display: flex; flex-direction: column; gap: 10px; background: #fff; padding: 10px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.05); height: 100%; position: sticky; top: 0; display: none; }
+        .map-container {
+            flex: 0.8;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.05);
+            height: 100%; 
+            position: sticky; top: 0;
+            display: none; 
+        }
+
         .map-frame { flex: 1; width: 100%; border-radius: 12px; background: #f0f2f5; border: none; }
         
         .map-btn { background: #3498db; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem; text-align: center; }
@@ -189,6 +414,7 @@
         .close-map-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .close-map-btn:hover { background: rgba(0,0,0,0.7); }
 
+        /* 輸入區塊 */
         .input-group { background: #fff; padding: 15px; border-radius: 16px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; border: 1px solid #eee; box-shadow: 0 2px 4px rgba(0,0,0,0.02); align-items: center; flex-shrink: 0; }
         select, input { padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: var(--input-bg); color: var(--text-color); outline: none; transition: border 0.2s; }
         select#dayInput { flex: 0 0 90px; }
@@ -246,11 +472,12 @@
         .note-textarea { width: 100%; min-height: 60px; padding: 10px; border: 1px solid #dfe6e9; border-radius: 8px; background: #fafafa; outline: none; box-sizing: border-box; }
         .note-textarea:focus { border-color: var(--accent-color); background: #fff; }
 
-        /* Modal */
+        /* Modal & List */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); justify-content: center; align-items: center; }
         img.modal-content { max-width: 90%; max-height: 90vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         .modal-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; cursor: pointer; font-weight: bold; }
         
+        /* Desktop Trip List (Modal) */
         .trip-list { list-style: none; padding: 0; margin: 0; max-height: 400px; overflow-y: auto; }
         .trip-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; background: white; }
         .trip-item:hover { background-color: #f8f9fa; }
@@ -275,17 +502,14 @@
         body.locked-mode .img-container { cursor: zoom-in; }
         body.locked-mode .edit-hint { display: none; }
         body.locked-mode .note-textarea { border: none; background: transparent; resize: none; padding: 5px 0; color: #2d3436; pointer-events: none; }
-        /* 鎖定時隱藏位置設定區 */
         body.locked-mode .plan-location-area { display: none !important; }
 
-        /* RWD Mobile Styles - FIX OVERLAY ISSUE */
+        /* RWD Mobile Styles */
         @media (max-width: 800px) {
             body { padding: 10px; }
             .container { 
                 height: 100vh; border-radius: 0; border: none; max-width: 100%; 
-                backdrop-filter: none; /* 移除特效避免層級問題 */
-                -webkit-backdrop-filter: none;
-                transform: none; 
+                backdrop-filter: none; -webkit-backdrop-filter: none; transform: none; 
             }
             .banner { height: 120px; }
             .banner-overlay h1 { font-size: 1.5rem; }
@@ -296,13 +520,10 @@
                 position: fixed; left: -280px; top: 0; bottom: 0; width: 280px; 
                 background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.1); 
                 transition: left 0.3s ease; padding-top: 60px;
-                z-index: 10001; /* 確保在最上層 */
+                z-index: 10001;
             }
             .sidebar.active { left: 0; }
-            .sidebar-overlay.active { 
-                display: block; 
-                z-index: 10000; /* 遮罩在側邊欄下方 */
-            }
+            .sidebar-overlay.active { display: block; z-index: 10000; }
 
             .main-panel { padding: 15px; overflow-y: auto; }
             .main-panel-content { flex-direction: column-reverse; display: block; overflow: visible; }
@@ -344,7 +565,10 @@
             <div id="daySidebarList"></div>
             <div class="sidebar-controls">
                 <button class="action-btn new-trip-btn" onclick="createNewTrip()" title="開始一個全新的空白行程">✨ 建立新行程</button>
-                <button class="action-btn trip-list-btn" onclick="openTripListModal()" title="查看所有公開行程">📂 所有行程</button>
+                <button class="action-btn trip-list-btn" onclick="handleTripListClick()" title="查看所有公開行程">📂 所有行程</button>
+                
+                <!-- 手機版直接顯示在側邊欄的清單 -->
+                <ul id="mobileTripList" class="mobile-trip-list" style="display:none;"></ul>
 
                 <div class="day-controls">
                     <button class="control-btn" onclick="changeTotalDays(-1)" title="減少一天">－</button>
@@ -396,6 +620,7 @@
     <img class="modal-content" id="modalImg">
 </div>
 
+<!-- 電腦版行程清單 Modal -->
 <div id="tripListModal" class="modal" style="z-index: 3000;">
     <div class="modal-box">
         <div class="modal-header">
@@ -672,7 +897,6 @@
         const hasLocClass = (plan.address || plan.useAutoSearch) ? "has-loc" : "";
         const timeTitle = isLocked ? "" : "點擊修改時間";
 
-        // 地圖按鈕邏輯：只有當有設定位置時才顯示 "查看地圖"
         let mapBtnHtml = '';
         if (plan.address || plan.useAutoSearch) {
              const query = plan.address || plan.activity;
@@ -712,7 +936,7 @@
         return item;
     }
 
-    // --- New Action Handlers ---
+    // --- Action Handlers ---
     function toggleLocation(id) {
         if(isLocked) return;
         const area = document.getElementById(`location-area-${id}`);
@@ -745,6 +969,89 @@
         if(!btn) return;
         if (plan.address || plan.useAutoSearch) btn.classList.add('has-loc');
         else btn.classList.remove('has-loc');
+    }
+
+    // --- Trip List Handling (Integrated RWD) ---
+    function handleTripListClick() {
+        // 如果是手機版 (寬度 <= 800px)，切換側邊欄內的清單顯示
+        if (window.innerWidth <= 800) {
+            const list = document.getElementById('mobileTripList');
+            if (list.style.display === 'none') {
+                list.style.display = 'block';
+                renderTripList('mobileTripList'); // 渲染到手機版清單容器
+            } else {
+                list.style.display = 'none';
+            }
+        } else {
+            // 如果是電腦版，打開 Modal
+            openTripListModal();
+        }
+    }
+
+    function renderTripList(targetId) {
+        const listEl = document.getElementById(targetId);
+        listEl.innerHTML = '<li style="padding:15px; text-align:center; color:#666;">載入中... ☁️</li>';
+        
+        // 取得資料邏輯與原本相同，只是目標 DOM 不同
+        const { collection, query, orderBy, limit, getDocs } = window.firebaseModules;
+        const q = query(collection(db, 'public_trips_meta'), orderBy('updatedAt', 'desc'), limit(20));
+        
+        getDocs(q).then(querySnapshot => {
+            listEl.innerHTML = '';
+            if (querySnapshot.empty) { 
+                listEl.innerHTML = '<li style="padding:15px; text-align:center; color:#999;">目前沒有任何公開行程</li>'; 
+                return; 
+            }
+            querySnapshot.forEach((doc) => {
+                const trip = doc.data();
+                const li = document.createElement('li');
+                li.className = 'trip-item';
+                const isCurrent = (trip.id === tripId);
+                const currentTag = isCurrent ? '<span class="current-trip-tag">目前</span>' : '';
+                const bgStyle = isCurrent ? 'background-color: #f0f9ff;' : '';
+                const date = new Date(trip.updatedAt).toLocaleDateString();
+                li.style = bgStyle;
+                
+                // 注意：這裡的 delete 邏輯需要判斷重新渲染哪個清單，簡單起見我們重新呼叫 handleTripListClick 或 openTripListModal
+                const deleteAction = isLocked ? '' : `<span class="trip-delete" onclick="deleteTripFromCloud('${trip.id}', '${targetId}')" title="永久刪除">&times;</span>`;
+                
+                li.innerHTML = `
+                    <div class="trip-link" onclick="location.href='?trip=${trip.id}'">
+                        <div style="display:flex; flex-direction:column;">
+                            <span>${trip.title || '未命名行程'} ${currentTag}</span>
+                            <span style="font-size:0.75rem; color:#b2bec3; font-weight:normal;">${date}</span>
+                        </div>
+                    </div>
+                    ${deleteAction}
+                `;
+                listEl.appendChild(li);
+            });
+        }).catch(e => {
+            console.error(e);
+            listEl.innerHTML = '<li style="padding:15px; text-align:center; color:red;">讀取失敗</li>';
+        });
+    }
+
+    // Modal wrapper for desktop
+    function openTripListModal() {
+        document.getElementById('tripListModal').style.display = 'flex';
+        renderTripList('myTripList');
+    }
+
+    function closeTripListModal() {
+        document.getElementById('tripListModal').style.display = 'none';
+    }
+
+    async function deleteTripFromCloud(id, targetContainerId) {
+        if(isLocked) return;
+        if(!confirm("這將會從雲端「永久刪除」此行程，所有人都無法再看到，確定嗎？")) return;
+        try {
+            const { deleteDoc, doc } = window.firebaseModules;
+            await deleteDoc(doc(db, 'public_trips_meta', id));
+            await deleteDoc(doc(db, 'public_trips', id));
+            // 刪除後重新渲染該容器
+            renderTripList(targetContainerId);
+        } catch(e) { alert("刪除失敗：" + e.message); }
     }
 
     // (其余原有函式保持不變)
@@ -792,7 +1099,9 @@
             if (sortables) sortables.forEach(s => s.option("disabled", false));
         }
         renderAllPlans();
-        if(document.getElementById('tripListModal').style.display === 'flex') renderTripListModal();
+        // 如果清單開著，也重新渲染
+        if(document.getElementById('tripListModal').style.display === 'flex') renderTripList('myTripList');
+        if(document.getElementById('mobileTripList').style.display === 'block') renderTripList('mobileTripList');
     }
 
     function addPlan() {
@@ -958,7 +1267,7 @@
         currentViewDay = day;
         renderSidebar(); renderAllPlans();
         if (day !== 'all') document.getElementById('dayInput').value = day;
-        closeMap(); // 切換天數時關閉地圖
+        closeMap();
     }
     function renderDaySelect() {
         const select = document.getElementById('dayInput');
@@ -1013,46 +1322,6 @@
         appState.plans = appState.plans.map(plan => { if (dayMapping[plan.day]) return { ...plan, day: dayMapping[plan.day] }; return plan; });
         if (currentViewDay !== 'all') currentViewDay = dayMapping[currentViewDay];
         renderSidebar(); renderAllPlans(); autoSave();
-    }
-    
-    // --- Trip List Logic ---
-    async function renderTripListModal() {
-        const listEl = document.getElementById('myTripList');
-        listEl.innerHTML = '<li style="padding:15px; text-align:center; color:#666;">載入中... ☁️</li>';
-        try {
-            const { collection, query, orderBy, limit, getDocs } = window.firebaseModules;
-            const q = query(collection(db, 'public_trips_meta'), orderBy('updatedAt', 'desc'), limit(20));
-            const querySnapshot = await getDocs(q);
-            listEl.innerHTML = '';
-            if (querySnapshot.empty) { listEl.innerHTML = '<li style="padding:15px; text-align:center; color:#999;">目前沒有任何公開行程</li>'; return; }
-            querySnapshot.forEach((doc) => {
-                const trip = doc.data();
-                const li = document.createElement('li');
-                li.className = 'trip-item';
-                const isCurrent = (trip.id === tripId);
-                const currentTag = isCurrent ? '<span class="current-trip-tag">目前</span>' : '';
-                const bgStyle = isCurrent ? 'background-color: #f0f9ff;' : '';
-                const date = new Date(trip.updatedAt).toLocaleDateString();
-                li.style = bgStyle;
-                li.innerHTML = `<div class="trip-link" onclick="location.href='?trip=${trip.id}'"><div style="display:flex; flex-direction:column;"><span>${trip.title || '未命名行程'} ${currentTag}</span><span style="font-size:0.75rem; color:#b2bec3; font-weight:normal;">${date}</span></div></div>${isLocked ? '' : `<span class="trip-delete" onclick="deleteTripFromCloud('${trip.id}')" title="永久刪除">&times;</span>`}`;
-                listEl.appendChild(li);
-            });
-        } catch (e) {
-            console.error("List Error:", e);
-            listEl.innerHTML = '<li style="padding:15px; text-align:center; color:red;">讀取失敗</li>';
-        }
-    }
-    function openTripListModal() { document.getElementById('tripListModal').style.display = 'flex'; renderTripListModal(); }
-    function closeTripListModal() { document.getElementById('tripListModal').style.display = 'none'; }
-    async function deleteTripFromCloud(id) {
-        if(isLocked) return;
-        if(!confirm("這將會從雲端「永久刪除」此行程，所有人都無法再看到，確定嗎？")) return;
-        try {
-            const { deleteDoc, doc } = window.firebaseModules;
-            await deleteDoc(doc(db, 'public_trips_meta', id));
-            await deleteDoc(doc(db, 'public_trips', id));
-            renderTripListModal();
-        } catch(e) { alert("刪除失敗：" + e.message); }
     }
 </script>
 </body>
