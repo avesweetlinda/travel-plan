@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- ★★★ 這裡原本寫死冰島，現在改為通用標題，避免分享時誤會 ★★★ -->
     <title>Travel Vibe ✈️ 旅程規劃</title>
     <meta property="og:title" content="Travel Vibe ✈️ 旅程規劃">
     <meta property="og:description" content="點擊查看詳細行程安排">
@@ -15,7 +13,6 @@
     <!-- 引入 Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        // ★★★ 新增 collection, query, orderBy, limit, getDocs, deleteDoc 用於列表功能
         import { getFirestore, doc, getDoc, setDoc, collection, query, orderBy, limit, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
@@ -57,7 +54,6 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // 將更多 Firestore 功能掛載到全域
         window.firebaseModules = { 
             db, auth, doc, getDoc, setDoc, signInAnonymously, onAuthStateChanged, ADMIN_PASSWORD,
             collection, query, orderBy, limit, getDocs, deleteDoc 
@@ -432,25 +428,82 @@
             border-color: #636e72;
         }
 
+        /* --- 右側主內容區 (分割佈局) --- */
         .main-panel {
             flex: 1;
             padding: 25px;
             background: rgba(255,255,255,0.4);
-            overflow-y: auto;
-            max-height: 800px;
+            overflow-y: hidden; /* 防止雙重捲軸 */
+            display: flex;
+            flex-direction: column;
         }
+
+        /* 新增：內部 Flex 容器，分左右兩欄 */
+        .main-panel-content {
+            display: flex;
+            gap: 20px;
+            height: 100%;
+            overflow: hidden;
+            min-height: 500px;
+        }
+
+        /* 左邊：行程列表 */
+        .timeline-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+            min-width: 0; /* 防止 Flex 子元素溢出 */
+        }
+
+        /* 右邊：地圖容器 */
+        .map-container {
+            flex: 1;
+            min-width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.05);
+            height: calc(100vh - 250px); /* 讓地圖高度適中 */
+            position: sticky; /* 讓地圖固定 */
+            top: 0;
+        }
+
+        .map-frame {
+            flex: 1;
+            width: 100%;
+            border-radius: 12px;
+            background: #eee;
+            border: none;
+        }
+
+        .map-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        .map-btn:hover { background: #2980b9; }
 
         .input-group {
             background: #fff;
             padding: 15px;
             border-radius: 16px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
             border: 1px solid #eee;
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
             align-items: center;
+            flex-shrink: 0;
         }
 
         select, input {
@@ -465,364 +518,71 @@
         }
 
         select#dayInput { flex: 0 0 90px; }
-        select#tagInput { flex: 0 0 130px; } 
-        input[type="time"] { flex: 0 0 100px; }
         input[type="text"] { flex: 1; min-width: 120px; }
-
-        input:focus, select:focus {
-            border-color: var(--accent-color);
-            background: #fff;
-        }
-
-        button.add-btn {
-            background: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        button.add-btn:hover {
-            background: var(--accent-hover);
-            transform: translateY(-1px);
-        }
+        button.add-btn { background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
         .day-section { margin-bottom: 30px; }
+        .day-header { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #eee; display: flex; align-items: center; }
+        .day-badge { background: var(--text-color); color: #fff; padding: 3px 10px; border-radius: 6px; font-size: 0.8rem; margin-right: 10px; }
         
-        .day-header {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text-color);
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #eee;
-            display: flex;
-            align-items: center;
-        }
+        .plan-item { background: #fff; margin-bottom: 12px; padding: 12px; border-radius: 12px; display: flex; flex-direction: column; border: 1px solid transparent; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: all 0.2s; cursor: grab; }
+        .plan-item:hover { border-color: var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .plan-main { display: flex; align-items: center; gap: 15px; width: 100%; }
+        /* ★★★ 新增：點擊效果樣式 ★★★ */
+        .plan-content { flex: 1; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: opacity 0.2s; }
+        .plan-content:hover { opacity: 0.7; }
         
-        .day-badge {
-            background: var(--text-color);
-            color: #fff;
-            padding: 3px 10px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            margin-right: 10px;
-        }
-
-        .plan-list-container {
-            min-height: 50px; 
-            padding-bottom: 10px;
-        }
-
-        .plan-item.sortable-ghost {
-            opacity: 0.4;
-            background: #f0f0f0;
-            border: 2px dashed #ccc;
-        }
-        
-        .plan-item.sortable-drag {
-            background: #fff;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            transform: rotate(2deg);
-        }
-
-        .plan-item {
-            background: #fff;
-            margin-bottom: 12px;
-            padding: 12px;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column; 
-            border: 1px solid transparent;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-            transition: all 0.2s, transform 0s; 
-            cursor: grab; 
-        }
-        
-        .plan-item:active { cursor: grabbing; }
-
-        .plan-item:hover {
-            border-color: var(--accent-color);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        .plan-main {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            width: 100%;
-        }
-
-        /* --- 圖片與編輯功能樣式 --- */
-        .img-container {
-            width: 80px;
-            height: 80px;
-            flex-shrink: 0;
-            margin-left: auto;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .plan-img {
-            width: 100%; height: 100%;
-            border-radius: 10px;
-            object-fit: cover;
-            background-color: #eee;
-            transition: filter 0.2s;
-        }
-
-        .img-placeholder {
-            width: 100%; height: 100%;
-            border-radius: 10px;
-            background-color: #f1f2f6;
-            border: 2px dashed #d1d8e0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #a4b0be;
-            font-size: 0.8rem;
-            text-align: center;
-            padding: 5px;
-            box-sizing: border-box;
-            transition: all 0.2s;
-        }
-
-        .img-container:hover .plan-img { filter: brightness(0.8); }
-        .img-container:hover .img-placeholder { border-color: var(--accent-color); color: var(--accent-color); background: #fff; }
-        
-        .edit-hint {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            opacity: 0;
-            font-size: 1.2rem;
-            pointer-events: none;
-            transition: opacity 0.2s;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-        }
+        .img-container { width: 80px; height: 80px; flex-shrink: 0; margin-left: auto; position: relative; cursor: pointer; }
+        .plan-img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; background: #eee; }
+        .img-placeholder { width: 100%; height: 100%; border-radius: 10px; background: #f1f2f6; border: 2px dashed #d1d8e0; display: flex; align-items: center; justify-content: center; color: #a4b0be; font-size: 0.8rem; }
         .img-container:hover .edit-hint { opacity: 1; }
+        .edit-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; opacity: 0; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
 
-        .plan-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .plan-time {
-            font-weight: 600;
-            color: var(--accent-color);
-            font-size: 0.85rem;
-            margin-bottom: 4px;
-            display: inline-block;
-            cursor: pointer; 
-            transition: color 0.2s;
-        }
-        .plan-time:hover { color: var(--accent-hover); }
-
-        .editable-text {
-            cursor: pointer;
-            padding: 2px 4px;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
-        .editable-text:hover { background: rgba(9, 132, 227, 0.1); }
-        .editable-text::after {
-            content: '✎';
-            font-size: 0.8rem;
-            color: #b2bec3;
-            margin-left: 5px;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .editable-text:hover::after { opacity: 1; }
-
-        .delete-btn {
-            background: none; border: none;
-            color: #dfe6e9;
-            cursor: pointer;
-            font-size: 1.2rem;
-            padding: 0 0 0 10px;
-            align-self: flex-start;
-        }
-
-        .plan-item:hover .delete-btn { color: #b2bec3; }
-        .delete-btn:hover { color: #d63031 !important; }
+        .plan-time { font-weight: 600; color: var(--accent-color); font-size: 0.85rem; margin-bottom: 4px; display: inline-block; }
+        .editable-text { padding: 2px 4px; border-radius: 4px; }
+        .delete-btn { background: none; border: none; color: #dfe6e9; cursor: pointer; font-size: 1.2rem; }
+        .delete-btn:hover { color: #d63031; }
         
-        /* 標籤樣式 */
-        .tag-base { padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: opacity 0.2s; }
-        .tag-base:hover { opacity: 0.8; }
+        .tag-base { padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
         .tag-flight { background-color: #e3f2fd; color: #1565c0; }
         .tag-hotel { background-color: #e8f5e9; color: #2e7d32; }
         .tag-food { background-color: #fff3e0; color: #e67e22; }
         .tag-sightseeing { background-color: #e0f7fa; color: #0097a7; }
         .tag-none { border: 1px dashed #ccc; color: #999; font-size: 0.7rem; padding: 1px 5px; }
 
-        .plan-details h3 {
-            margin: 0;
-            font-size: 1rem;
-            color: var(--text-color);
-            line-height: 1.4;
-            display: inline-block;
-        }
-
-        .plan-meta {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 6px;
-        }
-
-        .note-toggle-btn {
-            background: none;
-            border: 1px solid #eee;
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 0.75rem;
-            color: #b2bec3;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-        }
-        .note-toggle-btn:hover { background: #f1f2f6; color: var(--accent-color); }
+        .plan-meta { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+        .note-toggle-btn { background: none; border: 1px solid #eee; border-radius: 12px; padding: 2px 8px; font-size: 0.75rem; color: #b2bec3; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
         .note-toggle-btn.has-note { color: var(--accent-color); border-color: rgba(9, 132, 227, 0.2); }
+        .plan-note-area { width: 100%; display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #f1f2f6; }
+        .note-textarea { width: 100%; min-height: 60px; padding: 10px; border: 1px solid #dfe6e9; border-radius: 8px; background: #fafafa; outline: none; }
 
-        .plan-note-area {
-            width: 100%;
-            display: none;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px dashed #f1f2f6;
-            animation: expandNote 0.2s ease-out;
-            cursor: default; 
-        }
-
-        @keyframes expandNote {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .note-textarea {
-            width: 100%;
-            min-height: 60px;
-            padding: 10px;
-            border: 1px solid #dfe6e9;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 0.9rem;
-            resize: vertical;
-            box-sizing: border-box;
-            background: #fafafa;
-            color: #636e72;
-            outline: none;
-        }
-        .note-textarea:focus {
-            border-color: var(--accent-color);
-            background: #fff;
-        }
-
-        /* Modal */
-        .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 2000; 
-            left: 0; top: 0;
-            width: 100%; height: 100%; 
-            background-color: rgba(0,0,0,0.85); 
-            backdrop-filter: blur(5px);
-            animation: fadeInModal 0.2s;
-            justify-content: center;
-            align-items: center;
-        }
-        @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
-
-        img.modal-content {
-            margin: auto;
-            display: block;
-            max-width: 90%;
-            max-height: 90vh;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 20px; right: 30px;
-            color: #fff;
-            font-size: 40px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 2001;
-        }
-        .modal-close:hover { color: #bbb; }
-
-        /* 行程清單 Modal 樣式 */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); justify-content: center; align-items: center; }
+        img.modal-content { max-width: 90%; max-height: 90vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .modal-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; cursor: pointer; font-weight: bold; }
+        
         .trip-list { list-style: none; padding: 0; margin: 0; max-height: 400px; overflow-y: auto; }
-        .trip-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; background: white; transition: background 0.2s; }
-        .trip-item:last-child { border-bottom: none; }
+        .trip-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; background: white; }
         .trip-item:hover { background-color: #f8f9fa; }
-        .trip-link { flex: 1; text-decoration: none; color: #2d3436; font-weight: bold; cursor: pointer; display: flex; align-items: center; }
-        .trip-link:hover { color: var(--accent-color); }
-        .trip-delete { color: #b2bec3; cursor: pointer; padding: 5px 10px; border-radius: 4px; transition: all 0.2s; }
+        .trip-link { flex: 1; cursor: pointer; }
+        .trip-delete { color: #b2bec3; cursor: pointer; padding: 5px 10px; }
         .trip-delete:hover { background-color: #ffe0e0; color: #d63031; }
-        .current-trip-tag { font-size: 0.7rem; background: var(--accent-color); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: normal; }
-        .modal-box { background: white; width: 90%; max-width: 500px; border-radius: 12px; padding: 20px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-box { background: white; width: 90%; max-width: 500px; border-radius: 12px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-header { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
 
-        /* --- 鎖定模式樣式 --- */
-        body.locked-mode .input-group { display: none; }
-        body.locked-mode .delete-btn { display: none !important; }
-        body.locked-mode .day-controls { display: none; }
-        body.locked-mode .clear-btn { display: none; } 
-        body.locked-mode .reset-btn { display: none; }
-        body.locked-mode .new-trip-btn { display: none; } /* 鎖定時隱藏建立新行程按鈕 */
-        
-        body.locked-mode .editable-text { pointer-events: none; }
-        body.locked-mode .editable-text::after { display: none; }
-        body.locked-mode .plan-time { pointer-events: none; } 
-        body.locked-mode .tag-base { pointer-events: none; opacity: 1; } 
-        body.locked-mode .plan-item { cursor: default; }
-        body.locked-mode .sidebar-btn { cursor: pointer; } 
-        body.locked-mode .img-container { cursor: zoom-in; }
-        body.locked-mode .edit-hint { display: none; }
-        
-        body.locked-mode .img-container.img-empty { 
-            opacity: 0 !important;
-            pointer-events: none !important;
-            cursor: default !important;
-            border: none !important;
-            background: transparent !important;
-        } 
-        body.locked-mode .img-container.img-empty .img-placeholder { display: none !important; }
-        body.locked-mode .banner { pointer-events: none; }
+        body.locked-mode .input-group, body.locked-mode .delete-btn, body.locked-mode .day-controls, body.locked-mode .clear-btn, body.locked-mode .reset-btn, body.locked-mode .new-trip-btn { display: none; }
+        body.locked-mode .img-container.img-empty { opacity: 0 !important; pointer-events: none; }
         body.locked-mode .banner-edit-hint { display: none; }
-        body.locked-mode h1 { pointer-events: none; }
-        body.locked-mode h1::after { display: none; }
-        body.locked-mode .note-textarea { border: none; background: transparent; resize: none; padding: 5px 0; color: #2d3436; pointer-events: none; }
         body.locked-mode .note-toggle-btn:not(.has-note) { display: none; }
 
-        /* RWD */
-        @media (max-width: 600px) {
+        @media (max-width: 800px) {
+            .main-panel-content { flex-direction: column-reverse; }
+            .map-container { height: 250px; position: static; margin-bottom: 20px; }
             .content-wrapper { flex-direction: column; }
-            .sidebar { width: 100%; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 10px; gap: 10px; background: #fff; align-items: center; }
-            #daySidebarList { flex-direction: row; width: auto; }
-            .sidebar-controls { flex-direction: row; margin-top: 0; margin-left: 10px; border-left: 1px solid #eee; padding-left: 10px; padding-top: 0; border-top: none;}
+            .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; }
+            #daySidebarList { flex-direction: row; }
+            .sidebar-controls { flex-direction: row; border-left: 1px solid #eee; padding-left: 10px; margin-top: 0; padding-top: 0; border-top: none; }
             .action-btn { width: auto; font-size: 1rem; padding: 5px 10px; }
-            .sidebar-btn { width: auto; padding: 8px 15px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
-            .sidebar-btn.static-btn { border-bottom: none; margin-bottom: 0; border-right: 1px solid rgba(0,0,0,0.05); padding-right: 15px; margin-right: 5px; }
-            .sidebar-btn.active { background: var(--accent-color); color: #fff; box-shadow: 0 4px 10px rgba(9, 132, 227, 0.3); }
-            .sidebar-btn.active::before { display: none; }
-            .main-panel { padding: 15px; }
-            .input-group { flex-direction: column; align-items: stretch;}
-            select, input, button.add-btn { width: 100%; }
-            .img-container { width: 60px; height: 60px; }
+            .sidebar-btn { width: auto; padding: 8px 15px; white-space: nowrap; }
         }
     </style>
 </head>
@@ -840,7 +600,7 @@
         <img id="bannerImg" src="https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=1000&auto=format&fit=crop" alt="Iceland Landscape">
         <div class="banner-edit-hint">📷 更換封面</div>
         <div class="banner-overlay">
-            <h1 id="mainTitle" onclick="editTitle(event)" title="點擊修改標題">冰島環島攻略 🇮🇸</h1>
+            <h1 id="mainTitle" onclick="editTitle(event)" title="點擊修改標題">Travel Vibe ✈️</h1>
         </div>
     </div>
     
@@ -881,7 +641,14 @@
                 <input type="text" id="activityInput" placeholder="行程 (例如: 藍湖溫泉)">
                 <button class="add-btn" onclick="addPlan()">＋ 加入</button>
             </div>
-            <div id="timeline-container"></div>
+            
+            <div class="main-panel-content">
+                <div id="timeline-container" class="timeline-wrapper"></div>
+                <div class="map-container">
+                    <button class="map-btn" onclick="openFullMapRoute()">🗺️ 開啟 Google Maps 完整路線</button>
+                    <iframe id="googleMapFrame" class="map-frame" src="about:blank" loading="lazy"></iframe>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -891,7 +658,6 @@
     <img class="modal-content" id="modalImg">
 </div>
 
-<!-- 新增：行程清單 Modal -->
 <div id="tripListModal" class="modal" style="z-index: 3000;">
     <div class="modal-box">
         <div class="modal-header">
@@ -907,11 +673,11 @@
     let tripId = null;
     let currentUser = null;
     let saveTimeout = null;
+    const STORAGE_KEY_TRIPS = 'iceland_vibe_my_trips';
 
-    const DEFAULT_TITLE = "我的旅遊行程"; // 改為通用預設標題
+    const DEFAULT_TITLE = "我的旅遊計畫 ✈️"; 
     const DEFAULT_BANNER = "https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=1000&auto=format&fit=crop";
     
-    // 預設行程資料 (範例)
     const defaultItinerary = [
        { id: 101, day: 1, time: "08:00", activity: "TPE ✈️ HKG (國泰 CX477/495)", tag: "flight", image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=200&h=200&fit=crop", note: "記得提早2小時到機場報到" },
        { id: 102, day: 1, time: "14:55", activity: "HKG 轉機 (中轉歐洲)", tag: "flight", image: "https://images.unsplash.com/photo-1542296332-2e44a996aa0d?w=200&h=200&fit=crop" },
@@ -957,7 +723,7 @@
     let appState = {
         title: DEFAULT_TITLE,
         banner: DEFAULT_BANNER,
-        totalDays: 8,
+        totalDays: 5,
         plans: JSON.parse(JSON.stringify(defaultItinerary))
     };
 
@@ -979,14 +745,43 @@
         });
     });
 
+    // 實作缺少的 hideLoading 函式
+    function hideLoading() {
+        const overlay = document.getElementById('loading-overlay');
+        if(overlay) overlay.style.display = 'none';
+    }
+
+    // 實作缺少的 updateTripHistory 函式
+    function updateTripHistory(id, title) {
+        let history = JSON.parse(localStorage.getItem(STORAGE_KEY_TRIPS) || '[]');
+        history = history.filter(trip => trip.id !== id);
+        history.unshift({ id, title, timestamp: Date.now() });
+        if (history.length > 20) history = history.slice(0, 20);
+        localStorage.setItem(STORAGE_KEY_TRIPS, JSON.stringify(history));
+    }
+
     async function initTrip() {
         const { doc, getDoc, setDoc } = window.firebaseModules;
-        if (typeof PRESET_TRIP_ID !== 'undefined' && PRESET_TRIP_ID) {
-            tripId = PRESET_TRIP_ID;
-        } else {
-            const urlParams = new URLSearchParams(window.location.search);
-            tripId = urlParams.get('trip');
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        let idFromUrl = urlParams.get('trip');
+
+        if (!idFromUrl && typeof PRESET_TRIP_ID !== 'undefined' && PRESET_TRIP_ID) {
+            idFromUrl = PRESET_TRIP_ID;
         }
+
+        if (!idFromUrl) {
+            const history = getTripHistory();
+            if (history.length > 0) {
+                idFromUrl = history[0].id; // 取最近一筆
+                try {
+                    const newUrl = `${window.location.pathname}?trip=${idFromUrl}`;
+                    window.history.replaceState({path:newUrl}, '', newUrl);
+                } catch(e) {}
+            }
+        }
+
+        tripId = idFromUrl;
 
         if (!tripId) {
             tripId = crypto.randomUUID().substring(0, 8);
@@ -995,6 +790,7 @@
                 window.history.pushState({path:newUrl}, '', newUrl);
             } catch (e) { console.warn("Preview Mode: URL history update skipped."); }
             await saveToCloud(true);
+            updateTripHistory(tripId, appState.title); 
             hideLoading();
             renderUI();
         } else {
@@ -1005,8 +801,10 @@
                     const data = docSnap.data();
                     appState = { ...appState, ...data };
                     if (!appState.plans) appState.plans = [];
+                    updateTripHistory(tripId, appState.title); 
                 } else {
                     await saveToCloud(true);
+                    updateTripHistory(tripId, appState.title); 
                 }
             } catch (e) {
                 console.error("Load Error:", e);
@@ -1018,6 +816,10 @@
         }
     }
 
+    function getTripHistory() {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY_TRIPS) || '[]');
+    }
+
     function autoSave() {
         if (saveTimeout) clearTimeout(saveTimeout);
         saveTimeout = setTimeout(() => saveToCloud(), 1000);
@@ -1027,123 +829,70 @@
         if (!currentUser || !tripId) return;
         const { doc, setDoc } = window.firebaseModules;
         try {
-            // 1. 儲存行程資料
             await setDoc(doc(db, 'public_trips', tripId), appState);
-            
-            // 2. 儲存到公開目錄 (Meta Data)
             await setDoc(doc(db, 'public_trips_meta', tripId), {
                 id: tripId,
                 title: appState.title,
                 updatedAt: Date.now()
             }, { merge: true });
-
             console.log("Cloud Saved");
         } catch (e) { 
             console.error("Save Error:", e); 
             if (e.code === 'permission-denied' || e.message.includes('permissions')) {
-                alert("⚠️ 儲存失敗：權限不足\n\n請到 Firebase Console > Firestore Database > Rules\n將規則修改為允許讀寫 (Test Mode)。\n\n範例規則:\nallow read, write: if true;");
+                alert("⚠️ 儲存失敗：權限不足，請檢查 Firebase Rules。");
             }
         }
     }
 
-    // --- Trip List Logic (Firestore) ---
-    async function renderTripListModal() {
-        const listEl = document.getElementById('myTripList');
-        listEl.innerHTML = '<li style="padding:15px; text-align:center; color:#666;">載入中... ☁️</li>';
-        
-        try {
-            const { collection, query, orderBy, limit, getDocs } = window.firebaseModules;
-            // 抓取最近 20 筆公開行程
-            const q = query(collection(db, 'public_trips_meta'), orderBy('updatedAt', 'desc'), limit(20));
-            const querySnapshot = await getDocs(q);
-            
-            listEl.innerHTML = '';
-            
-            if (querySnapshot.empty) {
-                listEl.innerHTML = '<li style="padding:15px; text-align:center; color:#999;">目前沒有任何公開行程</li>';
-                return;
-            }
-
-            querySnapshot.forEach((doc) => {
-                const trip = doc.data();
-                const li = document.createElement('li');
-                li.className = 'trip-item';
-                
-                const isCurrent = (trip.id === tripId);
-                const currentTag = isCurrent ? '<span class="current-trip-tag">目前</span>' : '';
-                const bgStyle = isCurrent ? 'background-color: #f0f9ff;' : '';
-                const date = new Date(trip.updatedAt).toLocaleDateString();
-
-                li.style = bgStyle;
-                li.innerHTML = `
-                    <div class="trip-link" onclick="location.href='?trip=${trip.id}'">
-                        <div style="display:flex; flex-direction:column;">
-                            <span>${trip.title || '未命名行程'} ${currentTag}</span>
-                            <span style="font-size:0.75rem; color:#b2bec3; font-weight:normal;">${date}</span>
-                        </div>
-                    </div>
-                    ${isLocked ? '' : `<span class="trip-delete" onclick="deleteTripFromCloud('${trip.id}')" title="永久刪除">&times;</span>`}
-                `;
-                listEl.appendChild(li);
-            });
-        } catch (e) {
-            console.error("List Error:", e);
-            if (e.code === 'permission-denied' || e.message.includes('permissions')) {
-                listEl.innerHTML = '<li style="padding:15px; text-align:center; color:red;">無法讀取列表，權限不足。<br>請檢查 Firestore Rules。</li>';
-            } else {
-                listEl.innerHTML = '<li style="padding:15px; text-align:center; color:red;">讀取失敗，請稍後再試。</li>';
+    function updateMap(queryOverride) {
+        const frame = document.getElementById('googleMapFrame');
+        let query = queryOverride || appState.title;
+        if (!queryOverride && currentViewDay !== 'all') {
+            const dayPlans = appState.plans.filter(p => p.day == currentViewDay);
+            if (dayPlans.length > 0) {
+                query = dayPlans[0].activity;
             }
         }
+        query = query.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+        frame.src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
     }
 
-    function openTripListModal() {
-        document.getElementById('tripListModal').style.display = 'flex';
-        renderTripListModal();
-    }
-
-    function closeTripListModal() {
-        document.getElementById('tripListModal').style.display = 'none';
-    }
-
-    async function deleteTripFromCloud(id) {
-        if(isLocked) return;
-        if(!confirm("這將會從雲端「永久刪除」此行程，所有人都無法再看到，確定嗎？")) return;
-        
-        try {
-            const { deleteDoc, doc } = window.firebaseModules;
-            await deleteDoc(doc(db, 'public_trips_meta', id)); // 刪除目錄
-            await deleteDoc(doc(db, 'public_trips', id));      // 刪除資料
-            renderTripListModal(); // 重新整理清單
-        } catch(e) {
-            alert("刪除失敗：" + e.message);
+    function openFullMapRoute() {
+        let locations = [];
+        if (currentViewDay === 'all') {
+             const days = {};
+             appState.plans.forEach(p => {
+                 if (!days[p.day]) days[p.day] = p.activity;
+             });
+             locations = Object.values(days);
+        } else {
+            const dayPlans = appState.plans.filter(p => p.day == currentViewDay);
+            dayPlans.sort((a,b) => a.time.localeCompare(b.time));
+            locations = dayPlans.map(p => p.activity);
         }
+
+        if (locations.length === 0) return alert("目前沒有行程地點可規劃路線");
+        const cleanLocs = locations.map(l => l.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim());
+        const mapUrl = `https://www.google.com/maps/dir/${cleanLocs.map(encodeURIComponent).join('/')}`;
+        window.open(mapUrl, '_blank');
     }
 
-    // --- UI Logic ---
-    function hideLoading() {
-        const overlay = document.getElementById('loading-overlay');
-        if(overlay) overlay.style.display = 'none';
-    }
-
-    function showToast(msg) {
-        const toast = document.getElementById('toast');
-        toast.textContent = msg;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2000);
-    }
-
+    // --- Render Logic ---
     function renderUI() {
         renderHeader();
         renderSidebar();
         renderDaySelect();
         renderAllPlans();
         applyLockState(); 
+        updateMap(); 
     }
+
+    // ★★★ 補回缺失的 renderHeader 等函式 ★★★
 
     function renderHeader() {
         document.getElementById('mainTitle').innerText = appState.title;
         document.getElementById('bannerImg').src = appState.banner;
-        document.title = appState.title; // 更新網頁頁籤名稱
+        document.title = appState.title; // 更新頁籤名稱
     }
 
     function editTitle(e) {
@@ -1165,6 +914,42 @@
             renderHeader();
             autoSave();
         }
+    }
+
+    function switchView(day) {
+        currentViewDay = day;
+        renderSidebar();
+        renderAllPlans();
+        if (day !== 'all') document.getElementById('dayInput').value = day;
+        updateMap(); // 切換天數更新地圖
+    }
+
+    function renderDaySelect() {
+        const select = document.getElementById('dayInput');
+        const currentVal = select.value;
+        select.innerHTML = '';
+        for (let i = 1; i <= appState.totalDays; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `Day ${i}`;
+            select.appendChild(option);
+        }
+        if (currentVal && currentVal <= appState.totalDays) select.value = currentVal;
+    }
+
+    function changeTotalDays(delta) {
+        if(isLocked) return;
+        const newTotal = appState.totalDays + delta;
+        if (newTotal < 1 || newTotal > 30) return alert("天數請在 1~30 之間");
+        if (delta < 0) {
+            const hasPlans = appState.plans.some(p => p.day === appState.totalDays);
+            if (hasPlans && !confirm(`Day ${appState.totalDays} 還有行程，確定刪除？`)) return;
+            if (hasPlans) appState.plans = appState.plans.filter(p => p.day !== appState.totalDays);
+        }
+        appState.totalDays = newTotal;
+        renderSidebar(); renderDaySelect();
+        if (typeof currentViewDay === 'number' && currentViewDay > appState.totalDays) switchView('all');
+        autoSave();
     }
 
     function renderSidebar() {
@@ -1207,39 +992,6 @@
         });
         if (currentViewDay !== 'all') currentViewDay = dayMapping[currentViewDay];
         renderSidebar(); renderAllPlans(); autoSave();
-    }
-
-    function changeTotalDays(delta) {
-        if(isLocked) return;
-        const newTotal = appState.totalDays + delta;
-        if (newTotal < 1 || newTotal > 30) return alert("天數請在 1~30 之間");
-        if (delta < 0) {
-            const hasPlans = appState.plans.some(p => p.day === appState.totalDays);
-            if (hasPlans && !confirm(`Day ${appState.totalDays} 還有行程，確定刪除？`)) return;
-            if (hasPlans) appState.plans = appState.plans.filter(p => p.day !== appState.totalDays);
-        }
-        appState.totalDays = newTotal;
-        renderSidebar(); renderDaySelect();
-        if (typeof currentViewDay === 'number' && currentViewDay > appState.totalDays) switchView('all');
-        autoSave();
-    }
-
-    function switchView(day) {
-        currentViewDay = day;
-        renderSidebar(); renderAllPlans();
-        if (day !== 'all') document.getElementById('dayInput').value = day;
-    }
-
-    function renderDaySelect() {
-        const select = document.getElementById('dayInput');
-        const currentVal = select.value;
-        select.innerHTML = '';
-        for (let i = 1; i <= appState.totalDays; i++) {
-            const option = document.createElement('option');
-            option.value = i; option.textContent = `Day ${i}`;
-            select.appendChild(option);
-        }
-        if (currentVal && currentVal <= appState.totalDays) select.value = currentVal;
     }
 
     function renderAllPlans() {
@@ -1296,28 +1048,17 @@
         else if (plan.tag === 'sightseeing') { tagClass = 'tag-sightseeing'; tagText = '🏔️ 景點'; }
         
         if (!isLocked || (plan.tag && plan.tag !== '')) {
-             tagHtml = `<span class="tag-base ${tagClass}" onclick="editTag(${plan.id})" title="${isLocked ? '' : '點擊切換標籤'}">${tagText}</span>`;
+             tagHtml = `<span class="tag-base ${tagClass}" onclick="event.stopPropagation(); editTag(${plan.id})" title="${isLocked ? '' : '點擊切換標籤'}">${tagText}</span>`;
         }
 
         let imgHtml = '';
-        const clickAction = `handleImageClick(${plan.id}, '${plan.image || ''}')`;
-        const titleAttr = isLocked ? "點擊放大" : "點擊修改圖片";
-        const onErrorCode = `this.style.display='none'; if(document.body.classList.contains('locked-mode')){ this.parentNode.style.display='none'; } else { this.nextElementSibling.style.display='flex'; }`;
+        const clickAction = `event.stopPropagation(); handleImageClick(${plan.id}, '${plan.image || ''}')`;
+        const onErr = `this.style.display='none'; if(document.body.classList.contains('locked-mode')){ this.parentNode.style.display='none'; } else { this.nextElementSibling.style.display='flex'; }`;
 
         if (plan.image && plan.image.trim() !== "") {
-            imgHtml = `
-                <div class="img-container" onclick="${clickAction}" title="${titleAttr}">
-                    <img src="${plan.image}" class="plan-img" alt="行程圖片" onerror="${onErrorCode}">
-                    <div class="img-placeholder" style="display:none">＋圖片</div>
-                    <span class="edit-hint">📷</span>
-                </div>`;
+            imgHtml = `<div class="img-container" onclick="${clickAction}" title="${isLocked?'':'點擊修改'}"><img src="${plan.image}" class="plan-img" onerror="${onErr}"><div class="img-placeholder" style="display:none">＋圖片</div><span class="edit-hint">📷</span></div>`;
         } else if (!isLocked) {
-            const emptyClass = 'img-empty';
-            const titleText = "點擊新增圖片";
-            imgHtml = `
-                <div class="img-container ${emptyClass}" onclick="${clickAction}" title="${titleText}">
-                    <div class="img-placeholder">＋圖片</div>
-                </div>`;
+            imgHtml = `<div class="img-container img-empty" onclick="${clickAction}" title="點擊新增"><div class="img-placeholder">＋圖片</div></div>`;
         }
         
         const hasNoteClass = (plan.note && plan.note.trim() !== "") ? "has-note" : "";
@@ -1325,18 +1066,18 @@
 
         item.innerHTML = `
             <div class="plan-main">
-                <div class="plan-content">
-                    <span class="plan-time" onclick="editTime(${plan.id})" title="${timeTitle}">${plan.time}</span>
+                <div class="plan-content" onclick="updateMap('${plan.activity.replace(/'/g, "\\'")}')" title="點擊在地圖顯示">
+                    <span class="plan-time" onclick="event.stopPropagation(); editTime(${plan.id})" title="${timeTitle}">${plan.time}</span>
                     <div class="plan-details">
-                        <h3 class="editable-text" onclick="editActivity(${plan.id})" title="點擊修改文字">${plan.activity}</h3>
+                        <h3 class="editable-text" onclick="event.stopPropagation(); editActivity(${plan.id})" title="點擊修改文字">${plan.activity}</h3>
                         <div class="plan-meta">
                             ${tagHtml}
-                            <button id="note-btn-${plan.id}" class="note-toggle-btn ${hasNoteClass}" onclick="toggleNote(${plan.id})">📝 備註</button>
+                            <button id="note-btn-${plan.id}" class="note-toggle-btn ${hasNoteClass}" onclick="event.stopPropagation(); toggleNote(${plan.id})">📝 備註</button>
                         </div>
                     </div>
                 </div>
                 ${imgHtml}
-                <button class="delete-btn" onclick="deletePlan(${plan.id})">&times;</button>
+                <button class="delete-btn" onclick="event.stopPropagation(); deletePlan(${plan.id})">&times;</button>
             </div>
             <div id="note-area-${plan.id}" class="plan-note-area">
                 <textarea class="note-textarea" placeholder="備註..." onchange="saveNote(${plan.id}, this)">${plan.note || ''}</textarea>
@@ -1360,26 +1101,16 @@
         }
         appState.plans = newPlans;
         autoSave();
+        updateMap();
     }
 
     // --- Actions ---
     function toggleLock() {
         const { ADMIN_PASSWORD } = window.firebaseModules;
-        
-        if (!isLocked) {
-            isLocked = true;
-            applyLockState();
-            return;
-        }
-
+        if (!isLocked) { isLocked = true; applyLockState(); return; }
         const input = prompt("🔒 請輸入管理員密碼：");
-        if (input === ADMIN_PASSWORD) {
-            isLocked = false;
-            applyLockState();
-            showToast("🔓 編輯模式已啟用");
-        } else if (input !== null) {
-            alert("❌ 密碼錯誤");
-        }
+        if (input === ADMIN_PASSWORD) { isLocked = false; applyLockState(); showToast("🔓 編輯模式已啟用"); } 
+        else if (input !== null) { alert("❌ 密碼錯誤"); }
     }
 
     function applyLockState() {
@@ -1387,27 +1118,19 @@
         const lockBtn = document.getElementById('lockBtn');
         const lockIcon = document.getElementById('lockIcon');
         const lockText = document.getElementById('lockText');
-
         if (isLocked) {
-            body.classList.add('locked-mode');
-            lockBtn.classList.add('active');
-            lockIcon.textContent = '🔒';
-            lockText.textContent = '檢視中 (唯讀)';
+            body.classList.add('locked-mode'); lockBtn.classList.add('active');
+            lockIcon.textContent = '🔒'; lockText.textContent = '檢視中 (唯讀)';
             if (sidebarSortable) sidebarSortable.option("disabled", true);
             if (sortables) sortables.forEach(s => s.option("disabled", true));
         } else {
-            body.classList.remove('locked-mode');
-            lockBtn.classList.remove('active');
-            lockIcon.textContent = '🔓';
-            lockText.textContent = '編輯中';
+            body.classList.remove('locked-mode'); lockBtn.classList.remove('active');
+            lockIcon.textContent = '🔓'; lockText.textContent = '編輯中';
             if (sidebarSortable) sidebarSortable.option("disabled", false);
             if (sortables) sortables.forEach(s => s.option("disabled", false));
         }
         renderAllPlans();
-        // 如果清單開著，也重新渲染以更新刪除按鈕
-        if(document.getElementById('tripListModal').style.display === 'flex') {
-            renderTripListModal();
-        }
+        if(document.getElementById('tripListModal').style.display === 'flex') renderTripListModal();
     }
 
     function addPlan() {
@@ -1422,6 +1145,7 @@
         else renderAllPlans();
         document.getElementById('activityInput').value = '';
         autoSave();
+        updateMap();
     }
 
     function deletePlan(id) {
@@ -1430,6 +1154,7 @@
             appState.plans = appState.plans.filter(p => p.id !== id);
             renderAllPlans();
             autoSave();
+            updateMap();
         }
     }
 
@@ -1440,17 +1165,39 @@
             appState.totalDays = 1;
             renderSidebar(); renderDaySelect(); switchView('all');
             autoSave();
+            updateMap();
         }
     }
 
-    function createNewTrip() {
-        // ★★★ 權限檢查：只有解鎖狀態才能建立新行程
+    async function createNewTrip() {
         if(isLocked) return alert("請先解鎖以建立新行程");
 
-        if(confirm("確定要建立一個新的行程嗎？\n(請確保目前的網址已保存，否則將無法找回此行程)")) {
-            const url = new URL(window.location.href);
-            url.search = ""; // 清除 ?trip=...
-            window.location.href = url.toString();
+        if(confirm("確定要建立一個新的空白行程嗎？\n(將會產生新的網址 ID)")) {
+            // 1. 產生新 ID
+            tripId = crypto.randomUUID().substring(0, 8);
+            
+            // 2. 更新網址 (不刷新頁面)
+            try {
+                const newUrl = `${window.location.pathname}?trip=${tripId}`;
+                window.history.pushState({path:newUrl}, '', newUrl);
+            } catch(e) { console.warn("URL update skipped"); }
+            
+            // 3. 設定為「空白狀態」 (比照清除行程)
+            appState = {
+                title: "新的旅程", 
+                banner: DEFAULT_BANNER,
+                totalDays: 1, 
+                plans: [] 
+            };
+            
+            // 4. 重置 UI 狀態
+            currentViewDay = 'all';
+            
+            // 5. 存檔並渲染
+            await saveToCloud(true);
+            updateTripHistory(tripId, appState.title);
+            renderUI();
+            showToast("已建立新行程！✨");
         }
     }
 
@@ -1474,7 +1221,7 @@
         if(isLocked) return;
         const plan = appState.plans.find(p => p.id === id);
         const newTxt = prompt("行程內容:", plan.activity);
-        if (newTxt) { plan.activity = newTxt; renderAllPlans(); autoSave(); }
+        if (newTxt) { plan.activity = newTxt; renderAllPlans(); autoSave(); updateMap(); } 
     }
 
     function editTag(id) {
@@ -1510,25 +1257,62 @@
             appState.plans = JSON.parse(JSON.stringify(defaultItinerary));
             renderHeader(); renderSidebar(); renderDaySelect(); switchView('all');
             autoSave();
+            updateMap();
         }
     }
 
     function shareTrip() {
-        // ... (shareTrip logic)
         let url = window.location.href;
-        
         if (!url.includes('trip=') && tripId) {
             const separator = url.includes('?') ? '&' : '?';
             url = `${url}${separator}trip=${tripId}`;
         }
-        
         const textToCopy = `${appState.title}\n${url}`;
-
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(textToCopy).then(() => showToast("已複製連結與標題！🔗"));
         } else {
             prompt("複製網址:", url);
         }
+    }
+    
+    // --- Trip List Logic ---
+    async function renderTripListModal() {
+        const listEl = document.getElementById('myTripList');
+        listEl.innerHTML = '<li style="padding:15px; text-align:center; color:#666;">載入中... ☁️</li>';
+        try {
+            const { collection, query, orderBy, limit, getDocs } = window.firebaseModules;
+            const q = query(collection(db, 'public_trips_meta'), orderBy('updatedAt', 'desc'), limit(20));
+            const querySnapshot = await getDocs(q);
+            listEl.innerHTML = '';
+            if (querySnapshot.empty) { listEl.innerHTML = '<li style="padding:15px; text-align:center; color:#999;">目前沒有任何公開行程</li>'; return; }
+            querySnapshot.forEach((doc) => {
+                const trip = doc.data();
+                const li = document.createElement('li');
+                li.className = 'trip-item';
+                const isCurrent = (trip.id === tripId);
+                const currentTag = isCurrent ? '<span class="current-trip-tag">目前</span>' : '';
+                const bgStyle = isCurrent ? 'background-color: #f0f9ff;' : '';
+                const date = new Date(trip.updatedAt).toLocaleDateString();
+                li.style = bgStyle;
+                li.innerHTML = `<div class="trip-link" onclick="location.href='?trip=${trip.id}'"><div style="display:flex; flex-direction:column;"><span>${trip.title || '未命名行程'} ${currentTag}</span><span style="font-size:0.75rem; color:#b2bec3; font-weight:normal;">${date}</span></div></div>${isLocked ? '' : `<span class="trip-delete" onclick="deleteTripFromCloud('${trip.id}')" title="永久刪除">&times;</span>`}`;
+                listEl.appendChild(li);
+            });
+        } catch (e) {
+            console.error("List Error:", e);
+            listEl.innerHTML = '<li style="padding:15px; text-align:center; color:red;">讀取失敗</li>';
+        }
+    }
+    function openTripListModal() { document.getElementById('tripListModal').style.display = 'flex'; renderTripListModal(); }
+    function closeTripListModal() { document.getElementById('tripListModal').style.display = 'none'; }
+    async function deleteTripFromCloud(id) {
+        if(isLocked) return;
+        if(!confirm("這將會從雲端「永久刪除」此行程，所有人都無法再看到，確定嗎？")) return;
+        try {
+            const { deleteDoc, doc } = window.firebaseModules;
+            await deleteDoc(doc(db, 'public_trips_meta', id));
+            await deleteDoc(doc(db, 'public_trips', id));
+            renderTripListModal();
+        } catch(e) { alert("刪除失敗：" + e.message); }
     }
 </script>
 </body>
