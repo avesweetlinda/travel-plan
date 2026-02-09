@@ -29,23 +29,13 @@
             measurementId: "G-7QWLJ42T9W"
         };
 
-        // ==========================================
-        // ★★★ 2. 固定行程 ID (選填) ★★★
-        // ==========================================
         const PRESET_TRIP_ID = ""; 
-
-        // ==========================================
-        // ★★★ 3. 管理員密碼 (編輯權限鎖) ★★★
-        // ==========================================
         const ADMIN_PASSWORD = "MM1234567890"; 
 
-        // --- Firebase 初始化邏輯 ---
         if (!firebaseConfig || !firebaseConfig.projectId) {
             document.addEventListener('DOMContentLoaded', () => {
                 const overlay = document.getElementById('loading-overlay');
-                if(overlay) {
-                    overlay.innerHTML = `<div style="background:white;padding:30px;border-radius:12px;text-align:center;"><h2>尚未設定 Firebase</h2><p>請編輯 HTML 檔案填入設定。</p></div>`;
-                }
+                if(overlay) overlay.innerHTML = `<div style="background:white;padding:30px;"><h2>尚未設定 Firebase</h2></div>`;
             });
             throw new Error("Firebase Config is missing");
         }
@@ -72,7 +62,7 @@
             --accent-hover: #74b9ff;
             --sub-text: #636e72;
             --input-bg: #f5f6fa;
-            --sidebar-bg: rgba(241, 242, 246, 0.8);
+            --sidebar-bg: rgba(241, 242, 246, 0.95);
             --danger-color: #d63031;
             --warning-color: #f39c12;
             --info-color: #00cec9;
@@ -83,7 +73,7 @@
             background: var(--bg-gradient);
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             color: var(--text-color);
             display: flex;
             justify-content: center;
@@ -106,7 +96,7 @@
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* Toast Notification */
+        /* Toast */
         #toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.8); color: white; padding: 10px 25px;
@@ -117,7 +107,7 @@
 
         .container {
             width: 100%;
-            max-width: 95%; /* ★★★ 加寬至 95% */
+            max-width: 98%; /* 寬版設計 */
             background: var(--card-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -129,474 +119,84 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            min-height: 90vh; /* 確保高度 */
+            min-height: 95vh;
         }
 
-        /* 橫幅圖片區域 */
-        .banner {
-            width: 100%;
-            height: 180px;
-            position: relative;
-            overflow: hidden;
-            flex-shrink: 0;
-            cursor: pointer;
-            group: banner;
-        }
+        .banner { width: 100%; height: 180px; position: relative; overflow: hidden; cursor: pointer; }
+        .banner img { width: 100%; height: 100%; object-fit: cover; transition: transform 10s ease, filter 0.3s; }
+        .banner:hover img { transform: scale(1.05); filter: brightness(0.8); }
+        .banner-edit-hint { position: absolute; top: 15px; right: 15px; background: rgba(0, 0, 0, 0.5); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .banner:hover .banner-edit-hint { opacity: 1; }
+        .banner-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent); padding: 20px 30px; pointer-events: none; display: flex; align-items: center; }
 
-        .banner img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 10s ease, filter 0.3s;
-        }
-        
-        .banner:hover img {
-            transform: scale(1.05);
-            filter: brightness(0.8);
-        }
-
-        /* 封面編輯提示 */
-        .banner-edit-hint {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .banner:hover .banner-edit-hint {
-            opacity: 1;
-        }
-
-        .banner-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
-            padding: 20px 30px;
-            pointer-events: none;
-            display: flex; 
-            align-items: center;
-        }
-
-        /* Mobile Hamburger Button */
         .mobile-nav-toggle {
-            display: none; /* 預設電腦版隱藏 */
-            font-size: 1.5rem; color: white; background: rgba(0,0,0,0.3);
+            display: none; font-size: 1.5rem; color: white; background: rgba(0,0,0,0.3);
             border: none; border-radius: 8px; padding: 5px 10px; cursor: pointer; margin-right: 15px; pointer-events: auto;
         }
 
-        h1 {
-            font-weight: 800;
-            font-size: 2rem;
-            margin: 0;
-            color: #fff;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            letter-spacing: 1px;
-            pointer-events: auto;
-            cursor: pointer;
-            display: inline-block;
-            transition: all 0.2s;
-            padding: 2px 10px;
-            border-radius: 8px;
-        }
-
-        h1:hover {
-            background: rgba(255, 255, 255, 0.2);
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-
-        h1::after {
-            content: '✎';
-            font-size: 1.2rem;
-            margin-left: 10px;
-            opacity: 0;
-            transition: opacity 0.2s;
-            vertical-align: middle;
-        }
-
+        h1 { font-weight: 800; font-size: 2rem; margin: 0; color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,0.3); pointer-events: auto; cursor: pointer; display: inline-block; padding: 2px 10px; border-radius: 8px; }
+        h1:hover { background: rgba(255, 255, 255, 0.2); }
+        h1::after { content: '✎'; font-size: 1.2rem; margin-left: 10px; opacity: 0; transition: opacity 0.2s; }
         h1:hover::after { opacity: 1; }
 
-        /* 內容區塊佈局 */
-        .content-wrapper {
-            display: flex;
-            flex: 1; /* 填滿剩餘高度 */
-            position: relative;
-        }
-
-        /* 左側導覽列 */
-        .sidebar {
-            width: 160px; /* ★★★ 加寬側邊欄 */
-            background: var(--sidebar-bg);
-            border-right: 1px solid rgba(0,0,0,0.05);
-            padding: 20px 0;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            flex-shrink: 0;
-            overflow-y: auto; 
-            height: 100%; /* 確保高度 */
-            z-index: 100;
-        }
-
-        /* Mobile Overlay */
-        .sidebar-overlay {
-            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5); z-index: 99;
-        }
-
-        /* 側邊欄按鈕容器 - 用於 Sortable */
-        #daySidebarList {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            width: 100%;
-        }
-
-        .sidebar-btn {
-            padding: 12px 15px; /* 增加 padding */
-            text-align: left; /* 改為靠左 */
-            cursor: pointer;
-            font-weight: 600;
-            color: var(--sub-text);
-            transition: all 0.2s;
-            border: none;
-            background: transparent;
-            width: 100%;
-            font-family: inherit;
-            font-size: 0.95rem;
-            position: relative;
-            user-select: none; 
-            cursor: grab; 
-        }
-
-        .sidebar-btn:active {
-            cursor: grabbing;
-        }
-
-        .sidebar-btn:hover {
-            color: var(--accent-color);
-            background: rgba(255,255,255,0.5);
-        }
-
-        .sidebar-btn.active {
-            background: #fff;
-            color: var(--accent-color);
-            font-weight: 800;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
+        .content-wrapper { display: flex; flex: 1; position: relative; }
         
-        .sidebar-btn.active::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: var(--accent-color);
-        }
+        .sidebar { width: 160px; background: var(--sidebar-bg); border-right: 1px solid rgba(0,0,0,0.05); padding: 20px 0; display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; overflow-y: auto; height: 100%; z-index: 100; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 99; }
 
-        .sidebar-btn.static-btn {
-            cursor: pointer; 
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            margin-bottom: 5px;
-        }
+        #daySidebarList { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+        .sidebar-btn { padding: 12px 15px; text-align: left; cursor: pointer; font-weight: 600; color: var(--sub-text); border: none; background: transparent; width: 100%; transition: all 0.2s; position: relative; font-size: 0.95rem; user-select: none; cursor: grab; }
+        .sidebar-btn:active { cursor: grabbing; }
+        .sidebar-btn:hover { color: var(--accent-color); background: rgba(255,255,255,0.5); }
+        .sidebar-btn.active { background: #fff; color: var(--accent-color); font-weight: 800; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .sidebar-btn.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent-color); }
+        .sidebar-btn.static-btn { cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05); margin-bottom: 5px; }
 
-        /* 側邊欄拖曳時的幽靈樣式 */
-        .sidebar-sortable-ghost {
-            opacity: 0.4;
-            background: #dfe6e9;
-            border: 1px dashed #b2bec3;
-        }
-        
-        .sidebar-sortable-drag {
-            background: #fff;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transform: scale(1.05);
-            z-index: 999;
-        }
+        .sidebar-sortable-ghost { opacity: 0.4; background: #dfe6e9; border: 1px dashed #b2bec3; }
+        .sidebar-sortable-drag { background: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.1); transform: scale(1.05); z-index: 999; }
 
-        /* 功能按鈕區 */
-        .sidebar-controls {
-            margin-top: auto; /* 推到底部 (如果 sidebar 有 height) */
-            margin-top: 20px;
-            padding: 15px 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-            border-top: 1px solid rgba(0,0,0,0.05);
-            background: rgba(255,255,255,0.5); /* 稍微反白 */
-        }
+        .sidebar-controls { margin-top: auto; margin-top: 20px; padding: 15px 10px; display: flex; flex-direction: column; gap: 10px; align-items: center; border-top: 1px solid rgba(0,0,0,0.05); background: rgba(255,255,255,0.5); }
+        .day-controls { display: flex; justify-content: space-between; gap: 5px; width: 100%; }
+        .control-btn { flex: 1; height: 32px; border-radius: 8px; border: 1px solid #ddd; background: #fff; color: var(--sub-text); cursor: pointer; font-weight: bold; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .control-btn:hover { border-color: var(--accent-color); color: var(--accent-color); transform: scale(1.1); }
 
-        .day-controls {
-            display: flex;
-            justify-content: space-between;
-            gap: 5px;
-            width: 100%;
-        }
-
-        .control-btn {
-            flex: 1;
-            height: 32px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            background: #fff;
-            color: var(--sub-text);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            transition: all 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        .control-btn:hover {
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-            transform: scale(1.1);
-        }
-
-        /* 按鈕共用樣式 */
-        .action-btn {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            background: #fff;
-            border: 1px solid #ddd;
-            cursor: pointer;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            color: var(--sub-text);
-            transition: all 0.2s;
-        }
-
-        .action-btn:hover {
-            background: #f1f2f6;
-            color: #2d3436;
-        }
-        
-        /* 分享按鈕 */
-        .share-btn {
-            background: #e3f2fd;
-            border-color: #bbdefb;
-            color: #1976d2;
-            font-weight: bold;
-        }
-        .share-btn:hover {
-            background: #2196f3;
-            color: white;
-            border-color: #2196f3;
-        }
-        
-        /* 新行程按鈕 */
-        .new-trip-btn {
-            background: #6c5ce7;
-            color: white;
-            border-color: #6c5ce7;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .new-trip-btn:hover { background: #a29bfe; border-color: #a29bfe; color: white; }
-
-        .trip-list-btn {
-            background: #00cec9;
-            color: white;
-            border-color: #00cec9;
-            font-weight: bold;
-        }
-        .trip-list-btn:hover { background: #81ecec; border-color: #81ecec; color: white; }
-
-        /* 鎖定按鈕 */
+        .action-btn { width: 100%; padding: 10px; border-radius: 8px; background: #fff; border: 1px solid #ddd; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--sub-text); transition: all 0.2s; }
+        .action-btn:hover { background: #f1f2f6; color: #2d3436; }
+        .share-btn { background: #e3f2fd; border-color: #bbdefb; color: #1976d2; font-weight: bold; }
+        .share-btn:hover { background: #2196f3; color: white; border-color: #2196f3; }
+        .new-trip-btn { background: #6c5ce7; color: white; border-color: #6c5ce7; font-weight: bold; margin-bottom: 10px; }
+        .new-trip-btn:hover { background: #a29bfe; border-color: #a29bfe; }
+        .trip-list-btn { background: #00cec9; color: white; border-color: #00cec9; font-weight: bold; }
+        .trip-list-btn:hover { background: #81ecec; border-color: #81ecec; }
         .lock-btn:hover { background: #f1f2f6; }
-        .lock-btn.active {
-            background: #fff3e0;
-            color: #e67e22;
-            border-color: #ffe0b2;
-            font-weight: bold;
-        }
+        .lock-btn.active { background: #fff3e0; color: #e67e22; border-color: #ffe0b2; font-weight: bold; }
+        .clear-btn { background: #fff0f0; border-color: #ffcccc; color: var(--danger-color); }
+        .clear-btn:hover { background: var(--danger-color); color: white; border-color: var(--danger-color); }
+        .reset-btn { background: #f0f0f0; border-color: #ddd; color: #636e72; font-size: 0.8rem; }
+        .reset-btn:hover { background: #636e72; color: white; border-color: #636e72; }
 
-        /* 清除按鈕 */
-        .clear-btn {
-            background: #fff0f0;
-            border-color: #ffcccc;
-            color: var(--danger-color);
-        }
-        .clear-btn:hover {
-            background: var(--danger-color);
-            color: white;
-            border-color: var(--danger-color);
-        }
-
-        /* 重置按鈕 */
-        .reset-btn {
-            background: #f0f0f0;
-            border-color: #ddd;
-            color: #636e72;
-            font-size: 0.8rem;
-        }
-        .reset-btn:hover {
-            background: #636e72;
-            color: white;
-            border-color: #636e72;
-        }
-
-        /* --- 右側主內容區 (分割佈局) --- */
-        .main-panel {
-            flex: 1;
-            padding: 25px;
-            background: rgba(255,255,255,0.4);
-            overflow-y: hidden; /* 防止雙重捲軸 */
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-
-        /* 新增：內部 Flex 容器，分左右兩欄 */
-        .main-panel-content {
-            display: flex;
-            gap: 20px;
-            flex: 1;
-            overflow: hidden;
-            min-height: 500px;
-        }
-
-        /* 左邊：行程列表 */
-        .timeline-wrapper {
-            flex: 1.2; /* 給多一點空間 */
-            overflow-y: auto;
-            padding-right: 5px;
-            min-width: 300px;
-        }
-
-        /* 右邊：地圖容器 */
-        .map-container {
-            flex: 0.8;
-            min-width: 300px;
-            display: flex; /* 確保內容垂直排列 */
-            flex-direction: column;
-            gap: 10px;
-            background: #fff;
-            padding: 10px;
-            border-radius: 16px;
-            border: 1px solid rgba(0,0,0,0.05);
-            height: 100%; 
-            position: sticky; /* 讓地圖固定 */
-            top: 0;
-            /* ★★★ 預設隱藏地圖區塊 ★★★ */
-            display: none; 
-        }
-
-        .map-frame {
-            flex: 1;
-            width: 100%;
-            border-radius: 12px;
-            background: #f0f2f5;
-            border: none;
-        }
+        .main-panel { flex: 1; padding: 25px; background: rgba(255,255,255,0.4); display: flex; flex-direction: column; overflow-y: hidden; min-width: 0; }
+        .main-panel-content { display: flex; gap: 20px; flex: 1; overflow: hidden; min-height: 500px; }
         
-        .map-btn {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.9rem;
-            text-align: center;
-        }
+        .timeline-wrapper { flex: 1.2; overflow-y: auto; padding-right: 5px; min-width: 300px; }
+        
+        .map-container { flex: 0.8; min-width: 300px; display: flex; flex-direction: column; gap: 10px; background: #fff; padding: 10px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.05); height: 100%; position: sticky; top: 0; display: none; }
+        .map-frame { flex: 1; width: 100%; border-radius: 12px; background: #f0f2f5; border: none; }
+        
+        .map-btn { background: #3498db; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem; text-align: center; }
         .map-btn:hover { background: #2980b9; }
 
-        /* 新增：關閉地圖按鈕 */
-        .close-map-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.5);
-            color: white;
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-        .close-map-btn:hover {
-            background: rgba(0,0,0,0.7);
-        }
+        .close-map-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .close-map-btn:hover { background: rgba(0,0,0,0.7); }
 
-        /* 輸入區塊 */
-        .input-group {
-            background: #fff;
-            padding: 15px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            border: 1px solid #eee;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-            align-items: center;
-            flex-shrink: 0;
-        }
-
-        select, input {
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            background: var(--input-bg);
-            color: var(--text-color);
-            outline: none;
-            transition: border 0.2s;
-        }
-
+        .input-group { background: #fff; padding: 15px; border-radius: 16px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; border: 1px solid #eee; box-shadow: 0 2px 4px rgba(0,0,0,0.02); align-items: center; flex-shrink: 0; }
+        select, input { padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: var(--input-bg); color: var(--text-color); outline: none; transition: border 0.2s; }
         select#dayInput { flex: 0 0 90px; }
-        select#tagInput { flex: 0 0 130px; } 
-        input[type="time"] { flex: 0 0 100px; }
         input[type="text"] { flex: 1; min-width: 150px; }
+        input:focus, select:focus { border-color: var(--accent-color); background: #fff; }
+        button.add-btn { background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        button.add-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
 
-        input:focus, select:focus {
-            border-color: var(--accent-color);
-            background: #fff;
-        }
-
-        button.add-btn {
-            background: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        button.add-btn:hover {
-            background: var(--accent-hover);
-            transform: translateY(-1px);
-        }
-
-        /* 行程列表 */
         .day-section { margin-bottom: 30px; }
         .day-header { font-size: 1.2rem; font-weight: 700; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #eee; display: flex; align-items: center; }
         .day-badge { background: var(--text-color); color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 0.9rem; margin-right: 10px; }
@@ -604,7 +204,6 @@
         .plan-item { background: #fff; margin-bottom: 12px; padding: 15px; border-radius: 12px; display: flex; flex-direction: column; border: 1px solid transparent; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: all 0.2s; cursor: grab; position: relative; }
         .plan-item:hover { border-color: var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .plan-main { display: flex; align-items: flex-start; gap: 15px; width: 100%; }
-        /* ★★★ 新增：點擊效果樣式 ★★★ */
         .plan-content { flex: 1; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: opacity 0.2s; }
         .plan-content:hover { opacity: 0.7; }
         
@@ -635,17 +234,19 @@
         }
         .map-trigger-btn:hover { background: #f0f2f5; color: #e74c3c; border-color: #e74c3c; }
 
-        .note-toggle-btn { background: none; border: 1px solid #eee; border-radius: 12px; padding: 3px 10px; font-size: 0.8rem; color: #b2bec3; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
-        .note-toggle-btn:hover { background: #f1f2f6; color: var(--accent-color); }
-        .note-toggle-btn.has-note { color: var(--accent-color); border-color: rgba(9, 132, 227, 0.2); }
+        .note-toggle-btn, .loc-toggle-btn { background: none; border: 1px solid #eee; border-radius: 12px; padding: 3px 10px; font-size: 0.8rem; color: #b2bec3; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+        .note-toggle-btn:hover, .loc-toggle-btn:hover { background: #f1f2f6; color: var(--accent-color); }
+        .note-toggle-btn.has-note, .loc-toggle-btn.has-loc { color: var(--accent-color); border-color: rgba(9, 132, 227, 0.2); }
         
         .delete-btn { background: none; border: none; color: #dfe6e9; cursor: pointer; font-size: 1.4rem; padding: 0 0 0 10px; align-self: flex-start; }
         .delete-btn:hover { color: #d63031; }
 
-        .plan-note-area { width: 100%; display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #f1f2f6; }
+        .plan-note-area, .plan-location-area { width: 100%; display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #f1f2f6; }
+        .plan-location-area { background: #f9f9f9; padding: 10px; border-radius: 8px; }
         .note-textarea { width: 100%; min-height: 60px; padding: 10px; border: 1px solid #dfe6e9; border-radius: 8px; background: #fafafa; outline: none; box-sizing: border-box; }
+        .note-textarea:focus { border-color: var(--accent-color); background: #fff; }
 
-        /* Modal & List */
+        /* Modal */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); justify-content: center; align-items: center; }
         img.modal-content { max-width: 90%; max-height: 90vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         .modal-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; cursor: pointer; font-weight: bold; }
@@ -663,7 +264,7 @@
         body.locked-mode .input-group, body.locked-mode .delete-btn, body.locked-mode .day-controls, body.locked-mode .clear-btn, body.locked-mode .reset-btn, body.locked-mode .new-trip-btn { display: none; }
         body.locked-mode .img-container.img-empty { opacity: 0 !important; pointer-events: none; }
         body.locked-mode .banner-edit-hint { display: none; }
-        body.locked-mode .note-toggle-btn:not(.has-note) { display: none; }
+        body.locked-mode .note-toggle-btn:not(.has-note), body.locked-mode .loc-toggle-btn { display: none !important; }
         
         body.locked-mode .editable-text { pointer-events: none; }
         body.locked-mode .editable-text::after { display: none; }
@@ -674,11 +275,18 @@
         body.locked-mode .img-container { cursor: zoom-in; }
         body.locked-mode .edit-hint { display: none; }
         body.locked-mode .note-textarea { border: none; background: transparent; resize: none; padding: 5px 0; color: #2d3436; pointer-events: none; }
+        /* 鎖定時隱藏位置設定區 */
+        body.locked-mode .plan-location-area { display: none !important; }
 
-        /* RWD Mobile Styles */
+        /* RWD Mobile Styles - FIX OVERLAY ISSUE */
         @media (max-width: 800px) {
             body { padding: 10px; }
-            .container { height: 100vh; border-radius: 0; border: none; max-width: 100%; }
+            .container { 
+                height: 100vh; border-radius: 0; border: none; max-width: 100%; 
+                backdrop-filter: none; /* 移除特效避免層級問題 */
+                -webkit-backdrop-filter: none;
+                transform: none; 
+            }
             .banner { height: 120px; }
             .banner-overlay h1 { font-size: 1.5rem; }
             .mobile-nav-toggle { display: block; }
@@ -688,9 +296,13 @@
                 position: fixed; left: -280px; top: 0; bottom: 0; width: 280px; 
                 background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.1); 
                 transition: left 0.3s ease; padding-top: 60px;
+                z-index: 10001; /* 確保在最上層 */
             }
             .sidebar.active { left: 0; }
-            .sidebar-overlay.active { display: block; }
+            .sidebar-overlay.active { 
+                display: block; 
+                z-index: 10000; /* 遮罩在側邊欄下方 */
+            }
 
             .main-panel { padding: 15px; overflow-y: auto; }
             .main-panel-content { flex-direction: column-reverse; display: block; overflow: visible; }
@@ -699,9 +311,8 @@
             /* Mobile Map */
             .map-container { 
                 height: 200px; margin-bottom: 20px; width: 100%; 
-                position: relative; top: 0; z-index: 1; display: none; /* Mobile also hidden by default */
+                position: relative; top: 0; z-index: 1; display: none; 
             }
-            /* When map is active on mobile, it should show */
         }
     </style>
 </head>
@@ -728,7 +339,7 @@
     </div>
     
     <div class="content-wrapper">
-        <div class="sidebar" id="sidebarContainer">
+        <div class="sidebar">
             <button id="btn-all" class="sidebar-btn static-btn" onclick="switchView('all')">全部</button>
             <div id="daySidebarList"></div>
             <div class="sidebar-controls">
@@ -807,9 +418,8 @@
     
     // 預設行程資料
     const defaultItinerary = [
-       { id: 101, day: 1, time: "10:00", activity: "抵達機場 & 取車", tag: "flight", image: "", note: "" },
-       { id: 102, day: 1, time: "14:00", activity: "市區觀光", tag: "sightseeing", image: "", note: "" },
-       { id: 201, day: 2, time: "09:00", activity: "前往第一個景點", tag: "sightseeing", image: "", note: "" }
+       { id: 101, day: 1, time: "10:00", activity: "抵達機場 & 取車", tag: "flight", image: "", note: "", address: "", useAutoSearch: false },
+       { id: 102, day: 1, time: "14:00", activity: "市區觀光", tag: "sightseeing", image: "", note: "", address: "Taipei 101", useAutoSearch: false }
     ];
 
     let appState = {
@@ -837,15 +447,15 @@
         });
     });
 
-    // --- Mobile Sidebar Toggle ---
-    function toggleSidebar() {
-        document.querySelector('.sidebar').classList.toggle('active');
-        document.querySelector('.sidebar-overlay').classList.toggle('active');
-    }
-
+    // --- Helper Functions ---
     function hideLoading() {
         const overlay = document.getElementById('loading-overlay');
         if(overlay) overlay.style.display = 'none';
+    }
+
+    function toggleSidebar() {
+        document.querySelector('.sidebar').classList.toggle('active');
+        document.querySelector('.sidebar-overlay').classList.toggle('active');
     }
 
     function updateTripHistory(id, title) {
@@ -854,6 +464,10 @@
         history.unshift({ id, title, timestamp: Date.now() });
         if (history.length > 20) history = history.slice(0, 20);
         localStorage.setItem(STORAGE_KEY_TRIPS, JSON.stringify(history));
+    }
+
+    function getTripHistory() {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY_TRIPS) || '[]');
     }
 
     async function initTrip() {
@@ -912,10 +526,6 @@
         }
     }
 
-    function getTripHistory() {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY_TRIPS) || '[]');
-    }
-
     function autoSave() {
         if (saveTimeout) clearTimeout(saveTimeout);
         saveTimeout = setTimeout(() => saveToCloud(), 1000);
@@ -943,7 +553,7 @@
         const frame = document.getElementById('googleMapFrame');
         
         if (queryOverride) {
-            container.style.display = 'flex'; // 顯示地圖容器
+            container.style.display = 'flex'; 
             
             let query = queryOverride.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
             frame.src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
@@ -953,8 +563,8 @@
     function closeMap() {
         const container = document.getElementById('mapContainer');
         const frame = document.getElementById('googleMapFrame');
-        container.style.display = 'none'; // 隱藏地圖容器
-        frame.src = 'about:blank'; // 停止載入，節省資源
+        container.style.display = 'none'; 
+        frame.src = 'about:blank'; 
     }
 
     function openFullMapRoute() {
@@ -962,28 +572,33 @@
         if (currentViewDay === 'all') {
              const days = {};
              appState.plans.forEach(p => {
-                 if (!days[p.day]) days[p.day] = p.activity;
+                 if (!days[p.day] && (p.address || p.useAutoSearch)) {
+                    days[p.day] = p.address || p.activity;
+                 }
              });
              locations = Object.values(days);
         } else {
             const dayPlans = appState.plans.filter(p => p.day == currentViewDay);
             dayPlans.sort((a,b) => a.time.localeCompare(b.time));
-            locations = dayPlans.map(p => p.activity);
+            locations = dayPlans
+                .filter(p => p.address || p.useAutoSearch)
+                .map(p => p.address || p.activity);
         }
 
-        if (locations.length === 0) return alert("目前沒有行程地點可規劃路線");
+        if (locations.length === 0) return alert("目前沒有設定任何位置可規劃路線");
+        
         const cleanLocs = locations.map(l => l.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim());
         const mapUrl = `https://www.google.com/maps/dir/${cleanLocs.map(encodeURIComponent).join('/')}`;
         window.open(mapUrl, '_blank');
     }
 
+    // --- Render Logic ---
     function renderUI() {
         renderHeader();
         renderSidebar();
         renderDaySelect();
         renderAllPlans();
         applyLockState(); 
-        // 預設地圖不顯示
     }
 
     function renderAllPlans() {
@@ -1054,9 +669,16 @@
         }
         
         const hasNoteClass = (plan.note && plan.note.trim() !== "") ? "has-note" : "";
+        const hasLocClass = (plan.address || plan.useAutoSearch) ? "has-loc" : "";
         const timeTitle = isLocked ? "" : "點擊修改時間";
 
-        // 綁定 updateMap 事件到「📍 地圖」按鈕
+        // 地圖按鈕邏輯：只有當有設定位置時才顯示 "查看地圖"
+        let mapBtnHtml = '';
+        if (plan.address || plan.useAutoSearch) {
+             const query = plan.address || plan.activity;
+             mapBtnHtml = `<button class="map-trigger-btn" onclick="event.stopPropagation(); updateMap('${query.replace(/'/g, "\\'")}')">🗺️ 查看地圖</button>`;
+        }
+
         item.innerHTML = `
             <div class="plan-main">
                 <div class="plan-content">
@@ -1065,7 +687,8 @@
                         <h3 class="editable-text" onclick="event.stopPropagation(); editActivity(${plan.id})" title="點擊修改文字">${plan.activity}</h3>
                         <div class="plan-meta">
                             ${tagHtml}
-                            <button class="map-trigger-btn" onclick="event.stopPropagation(); updateMap('${plan.activity.replace(/'/g, "\\'")}')">📍 地圖</button>
+                            ${mapBtnHtml}
+                            <button id="loc-btn-${plan.id}" class="loc-toggle-btn ${hasLocClass}" onclick="event.stopPropagation(); toggleLocation(${plan.id})">📍 設定位置</button>
                             <button id="note-btn-${plan.id}" class="note-toggle-btn ${hasNoteClass}" onclick="event.stopPropagation(); toggleNote(${plan.id})">📝 備註</button>
                         </div>
                     </div>
@@ -1073,12 +696,58 @@
                 ${imgHtml}
                 <button class="delete-btn" onclick="event.stopPropagation(); deletePlan(${plan.id})">&times;</button>
             </div>
+            <div id="location-area-${plan.id}" class="plan-location-area">
+                <input type="text" style="width:100%; padding:8px; margin-bottom:5px; border:1px solid #ddd; border-radius:4px;" 
+                       placeholder="輸入精確地址 (例如: 台北市信義區...)" 
+                       value="${plan.address || ''}" 
+                       onchange="saveLocation(${plan.id}, this.value)">
+                <label style="font-size:0.9rem; color:#636e72; cursor:pointer;">
+                    <input type="checkbox" ${plan.useAutoSearch ? 'checked' : ''} onchange="saveAutoSearch(${plan.id}, this.checked)">
+                    🔍 使用行程名稱「${plan.activity}」自動搜尋 (若未輸入地址)
+                </label>
+            </div>
             <div id="note-area-${plan.id}" class="plan-note-area">
                 <textarea class="note-textarea" placeholder="備註..." onchange="saveNote(${plan.id}, this)">${plan.note || ''}</textarea>
             </div>`;
         return item;
     }
 
+    // --- New Action Handlers ---
+    function toggleLocation(id) {
+        if(isLocked) return;
+        const area = document.getElementById(`location-area-${id}`);
+        area.style.display = (area.style.display === 'none' || area.style.display === '') ? 'block' : 'none';
+        document.getElementById(`note-area-${id}`).style.display = 'none';
+    }
+
+    function saveLocation(id, value) {
+        const plan = appState.plans.find(p => p.id === id);
+        if (plan) { 
+            plan.address = value; 
+            updateLocBtnStyle(id, plan);
+            autoSave(); 
+            renderAllPlans(); 
+        }
+    }
+
+    function saveAutoSearch(id, checked) {
+        const plan = appState.plans.find(p => p.id === id);
+        if (plan) { 
+            plan.useAutoSearch = checked; 
+            updateLocBtnStyle(id, plan);
+            autoSave(); 
+            renderAllPlans(); 
+        }
+    }
+
+    function updateLocBtnStyle(id, plan) {
+        const btn = document.getElementById(`loc-btn-${id}`);
+        if(!btn) return;
+        if (plan.address || plan.useAutoSearch) btn.classList.add('has-loc');
+        else btn.classList.remove('has-loc');
+    }
+
+    // (其余原有函式保持不變)
     function saveDragOrder() {
         const newPlans = [];
         document.querySelectorAll('.plan-list-container').forEach(container => {
@@ -1115,6 +784,7 @@
             lockIcon.textContent = '🔒'; lockText.textContent = '檢視中 (唯讀)';
             if (sidebarSortable) sidebarSortable.option("disabled", true);
             if (sortables) sortables.forEach(s => s.option("disabled", true));
+            document.querySelectorAll('.plan-location-area, .plan-note-area').forEach(el => el.style.display = 'none');
         } else {
             body.classList.remove('locked-mode'); lockBtn.classList.remove('active');
             lockIcon.textContent = '🔓'; lockText.textContent = '編輯中';
@@ -1132,7 +802,7 @@
         const tag = document.getElementById('tagInput').value;
         const activity = document.getElementById('activityInput').value;
         if (!time || !activity) return alert("請輸入時間和內容");
-        appState.plans.push({ id: Date.now(), day: parseInt(day), time, activity, tag, image: "", note: "" });
+        appState.plans.push({ id: Date.now(), day: parseInt(day), time, activity, tag, image: "", note: "", address: "", useAutoSearch: false });
         if (currentViewDay !== 'all' && currentViewDay != day) switchView(parseInt(day));
         else renderAllPlans();
         document.getElementById('activityInput').value = '';
@@ -1221,11 +891,17 @@
         if (isLocked && (!plan || !plan.note)) return;
         const area = document.getElementById(`note-area-${id}`);
         area.style.display = (area.style.display === 'none' || area.style.display === '') ? 'block' : 'none';
+        document.getElementById(`location-area-${id}`).style.display = 'none'; // 關閉位置設定
     }
 
     function saveNote(id, textarea) {
         const plan = appState.plans.find(p => p.id === id);
-        if (plan) { plan.note = textarea.value; autoSave(); }
+        if (plan) { 
+            plan.note = textarea.value; 
+            const btn = document.getElementById(`note-btn-${id}`);
+            if (plan.note) btn.classList.add('has-note'); else btn.classList.remove('has-note');
+            autoSave(); 
+        }
     }
 
     function openModal(url) { document.getElementById('imageModal').style.display = "flex"; document.getElementById('modalImg').src = url; }
@@ -1257,7 +933,7 @@
         }
     }
     
-    // --- Render Helpers (Missing in previous snippet) ---
+    // --- Render Helpers ---
     function renderHeader() {
         document.getElementById('mainTitle').innerText = appState.title;
         document.getElementById('bannerImg').src = appState.banner;
@@ -1282,7 +958,7 @@
         currentViewDay = day;
         renderSidebar(); renderAllPlans();
         if (day !== 'all') document.getElementById('dayInput').value = day;
-        // 移除這裡的 updateMap，確保切換天數時不會彈出地圖
+        closeMap(); // 切換天數時關閉地圖
     }
     function renderDaySelect() {
         const select = document.getElementById('dayInput');
