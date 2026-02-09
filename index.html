@@ -533,8 +533,8 @@
             
             /* Mobile Map */
             .map-container { 
-                height: 300px; /* 手機版地圖高度稍大一點比較好操作 */
-                width: calc(100% - 20px); /* 扣除 padding */
+                height: 500px; /* 手機版地圖高度稍大一點比較好操作 */
+                width: calc(100% - 15px); /* 扣除 padding */
                 margin: 10px auto; 
                 position: relative; 
                 top: 0; 
@@ -701,7 +701,7 @@
     };
 
     let currentViewDay = 'all'; 
-    let isLocked = true; 
+    let isLocked = (sessionStorage.getItem('isTripUnlocked') === 'true') ? false : true;
     let sortables = []; 
     let sidebarSortable = null;
 
@@ -819,42 +819,31 @@
     }
 
     // --- Map Logic (支援手機版動態插入) ---
-    function updateMap(queryOverride) {
+    function updateMap(queryOverride, el) {
         const container = document.getElementById('mapContainer');
         const frame = document.getElementById('googleMapFrame');
         
         if (queryOverride) {
-            // 1. 處理顯示邏輯
             container.style.display = 'flex'; 
-            
-            // 2. RWD 動態位移：如果是手機版，將地圖移動到點擊的那個行程下方
+    
+            // RWD 動態位移
             if (window.innerWidth <= 800) {
-                // 透過 event.target 找到觸發點擊的 plan-item
-                // 我們需要在 HTML 呼叫處確保 event 被傳遞進來，或者尋找 active 元素
-                // 這裡簡單的做法是：尋找最靠近點擊按鈕的 .plan-item
-                const activeBtn = event.currentTarget; 
-                const planItem = activeBtn.closest('.plan-item');
-                
-                if (planItem) {
-                    // 將地圖容器插入到該行程項目的正後方
-                    planItem.insertAdjacentElement('afterend', container);
-                    
-                    // 自動捲動讓地圖對準畫面中央（選配）
-                    setTimeout(() => {
-                        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 100);
+                // 如果有傳入按鈕元素，就找它最近的行程卡片
+                const anchor = el || event.currentTarget;
+                if (anchor) {
+                    const planItem = anchor.closest('.plan-item');
+                    if (planItem) {
+                        planItem.insertAdjacentElement('afterend', container);
+                    }
                 }
             } else {
-                // 電腦版：放回原本的 main-panel-content 右側
-                const originalParent = document.querySelector('.main-panel-content');
-                if (originalParent) originalParent.appendChild(container);
+                // 電腦版放回原位
+                const dest = document.querySelector('.main-panel-content');
+                if (dest) dest.appendChild(container);
             }
     
-            // 3. 載入 Google Maps 內容
+            // 載入地圖 URL
             let query = queryOverride.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
-            frame.src = `https://www.google.com/maps/embed/v1/place?key=你的GoogleAPIKey&q=${encodeURIComponent(query)}`;
-            
-            // 注意：如果你沒有 API Key，維持你原本的替代方案：
             frame.src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
         }
     }
@@ -974,7 +963,7 @@
         let mapBtnHtml = '';
         if (plan.address || plan.useAutoSearch) {
              const query = plan.address || plan.activity;
-             mapBtnHtml = `<button class="map-trigger-btn" onclick="updateMap('${query.replace(/'/g, "\\'")}')">🗺️ 查看地圖</button>`;
+             mapBtnHtml = `<button class="map-trigger-btn" onclick="event.stopPropagation(); updateMap('${query.replace(/'/g, "\\'")}', this)">🗺️ 查看地圖</button>`;
         }
 
         item.innerHTML = `
@@ -1149,10 +1138,26 @@
 
     function toggleLock() {
         const { ADMIN_PASSWORD } = window.firebaseModules;
-        if (!isLocked) { isLocked = true; applyLockState(); return; }
+        
+        if (!isLocked) { 
+            // 執行鎖定
+            isLocked = true; 
+            sessionStorage.removeItem('isTripUnlocked'); // 移除權限紀錄
+            applyLockState(); 
+            return; 
+        }
+        
         const input = prompt("🔒 請輸入管理員密碼：");
-        if (input === ADMIN_PASSWORD) { isLocked = false; applyLockState(); showToast("🔓 編輯模式已啟用"); } 
-        else if (input !== null) { alert("❌ 密碼錯誤"); }
+        if (input === ADMIN_PASSWORD) { 
+            // 登入成功
+            isLocked = false; 
+            sessionStorage.setItem('isTripUnlocked', 'true'); // 存入 session，只要不關掉分頁都會記住
+            applyLockState(); 
+            showToast("🔓 編輯模式已啟用"); 
+        } 
+        else if (input !== null) { 
+            alert("❌ 密碼錯誤"); 
+        }
     }
 
     function applyLockState() {
@@ -1339,9 +1344,9 @@
     }
     function switchView(day) {
         currentViewDay = day;
-        renderSidebar(); renderAllPlans();
-        if (day !== 'all') document.getElementById('dayInput').value = day;
-        closeMap();
+        closeMap(); // 切換天數時先關閉地圖，避免 DOM 錯亂
+        renderSidebar(); 
+        renderAllPlans();
     }
     function renderDaySelect() {
         const select = document.getElementById('dayInput');
@@ -1400,6 +1405,7 @@
 </script>
 </body>
 </html>
+
 
 
 
