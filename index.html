@@ -484,6 +484,7 @@
         .trip-link { flex: 1; cursor: pointer; }
         .trip-delete { color: #b2bec3; cursor: pointer; padding: 5px 10px; }
         .trip-delete:hover { background-color: #ffe0e0; color: #d63031; }
+        .current-trip-tag { font-size: 0.7rem; background: var(--accent-color); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: normal; }
         .modal-box { background: white; width: 90%; max-width: 500px; border-radius: 12px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-header { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
 
@@ -643,8 +644,45 @@
     
     // 預設行程資料
     const defaultItinerary = [
-       { id: 101, day: 1, time: "10:00", activity: "抵達機場 & 取車", tag: "flight", image: "", note: "", address: "", useAutoSearch: false },
-       { id: 102, day: 1, time: "14:00", activity: "市區觀光", tag: "sightseeing", image: "", note: "", address: "Taipei 101", useAutoSearch: false }
+       { id: 101, day: 1, time: "08:00", activity: "TPE ✈️ HKG (國泰 CX477/495)", tag: "flight", image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=200&h=200&fit=crop", note: "記得提早2小時到機場報到" },
+       { id: 102, day: 1, time: "14:55", activity: "HKG 轉機 (中轉歐洲)", tag: "flight", image: "https://images.unsplash.com/photo-1542296332-2e44a996aa0d?w=200&h=200&fit=crop" },
+       { id: 103, day: 1, time: "18:00", activity: "抵達冰島 KEF 機場 & 取車", tag: "flight", image: "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=200&h=200&fit=crop" },
+       { id: 104, day: 1, time: "19:30", activity: "住宿：Odinsve Hotel", tag: "hotel", image: "https://images.unsplash.com/photo-1596425318727-2c18510842e3?w=200&h=200&fit=crop" },
+       { id: 105, day: 1, time: "20:00", activity: "Bonus 小豬超市 & Outlet", image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=200&h=200&fit=crop" },
+       { id: 106, day: 1, time: "21:00", activity: "晚餐：Íslenski barinn (燉羊腿)", tag: "food", image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=200&h=200&fit=crop" },
+       { id: 201, day: 2, time: "09:00", activity: "Bæjarins Beztu Pylsur (熱狗堡)", tag: "food", image: "https://images.unsplash.com/photo-1612392166886-ee8475b03af2?w=200&h=200&fit=crop" },
+       { id: 202, day: 2, time: "11:00", activity: "Skógafoss 史可加瀑布", tag: "sightseeing", image: "https://images.unsplash.com/photo-1520690214124-2405c5217036?w=200&h=200&fit=crop" },
+       { id: 203, day: 2, time: "13:30", activity: "Reynisfjara 黑沙灘", tag: "sightseeing", image: "https://images.unsplash.com/photo-1508138221679-760a23a2285b?w=200&h=200&fit=crop" },
+       { id: 204, day: 2, time: "15:00", activity: "午點：The Soup Company (熔岩湯)", tag: "food", image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=200&h=200&fit=crop" },
+       { id: 205, day: 2, time: "18:00", activity: "住宿：The Milk Factory", tag: "hotel", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=200&h=200&fit=crop" },
+       { id: 206, day: 2, time: "19:30", activity: "晚餐：Kaffi Hornid", tag: "food", image: "https://images.unsplash.com/photo-1550966871-3ed3c47e2ce2?w=200&h=200&fit=crop" },
+       { id: 301, day: 3, time: "08:30", activity: "牛奶工廠早餐 & 出發", tag: "food", image: "https://images.unsplash.com/photo-1533089862017-ec329abb0511?w=200&h=200&fit=crop" },
+       { id: 302, day: 3, time: "10:00", activity: "📍 冰河湖藍洞之旅 (Blue Ice Cave)", tag: "sightseeing", image: "https://images.unsplash.com/photo-1490735891913-40897cdaafd1?w=200&h=200&fit=crop" },
+       { id: 303, day: 3, time: "13:00", activity: "午餐：當地小攤販", tag: "food", image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=200&h=200&fit=crop" },
+       { id: 304, day: 3, time: "14:30", activity: "Jökulsárlón 冰河湖散步", tag: "sightseeing", image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&h=200&fit=crop" },
+       { id: 305, day: 3, time: "18:00", activity: "晚餐：Pakkhús (必吃龍蝦餐 🦞)", tag: "food", image: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=200&h=200&fit=crop" },
+       { id: 306, day: 3, time: "20:00", activity: "住宿：The Milk Factory (看極光!)", tag: "hotel", image: "https://images.unsplash.com/photo-1483347752467-85239967961c?w=200&h=200&fit=crop" },
+       { id: 401, day: 4, time: "09:00", activity: "早餐 & Check-out", image: "https://images.unsplash.com/photo-1493770348161-369560ae357d?w=200&h=200&fit=crop" },
+       { id: 402, day: 4, time: "11:00", activity: "Fjaðrárgljúfur 羽毛河峽谷", tag: "sightseeing", image: "https://images.unsplash.com/photo-1504829857797-ddff29c27927?w=200&h=200&fit=crop" },
+       { id: 403, day: 4, time: "14:00", activity: "Seljalandsfoss 水簾洞瀑布", tag: "sightseeing", image: "https://images.unsplash.com/photo-1533423793766-26156e54589d?w=200&h=200&fit=crop" },
+       { id: 404, day: 4, time: "17:00", activity: "住宿：Audur Guesthouse", tag: "hotel", image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=200&h=200&fit=crop" },
+       { id: 405, day: 4, time: "19:00", activity: "晚餐：Icelandic Street Food (麵包湯)", tag: "food", image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=200&h=200&fit=crop" },
+       { id: 501, day: 5, time: "09:30", activity: "黃金圈一日遊 (Golden Circle)", tag: "sightseeing", image: "https://images.unsplash.com/photo-1476610182048-b716b8518aae?w=200&h=200&fit=crop" },
+       { id: 502, day: 5, time: "15:00", activity: "Blue Lagoon 藍湖溫泉 ♨️", tag: "sightseeing", image: "https://images.unsplash.com/photo-1533285785082-d2789182d334?w=200&h=200&fit=crop" },
+       { id: 503, day: 5, time: "19:00", activity: "晚餐：Seabaron (烤肉串/龍蝦湯)", tag: "food", image: "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=200&h=200&fit=crop" },
+       { id: 504, day: 5, time: "21:00", activity: "住宿：Audur Guesthouse", tag: "hotel", image: "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=200&h=200&fit=crop" },
+       { id: 601, day: 6, time: "10:00", activity: "雷克雅維克大教堂", tag: "sightseeing", image: "https://images.unsplash.com/photo-1555543714-36528d228c29?w=200&h=200&fit=crop" },
+       { id: 602, day: 6, time: "12:00", activity: "午餐：市區熱狗攤", tag: "food", image: "https://images.unsplash.com/photo-1620898583487-160e1d156161?w=200&h=200&fit=crop" },
+       { id: 603, day: 6, time: "14:00", activity: "Sky Lagoon 天空之湖", tag: "sightseeing", image: "https://images.unsplash.com/photo-1515658323427-4b5314eb4e13?w=200&h=200&fit=crop" },
+       { id: 604, day: 6, time: "17:00", activity: "教堂山 (Kirkjufell) / 看海豹", tag: "sightseeing", image: "https://images.unsplash.com/photo-1504893524553-bfe206dd8e96?w=200&h=200&fit=crop" },
+       { id: 605, day: 6, time: "20:00", activity: "晚餐：沒東西吃各自保命 😂", tag: "food", image: "https://images.unsplash.com/photo-1465311440653-ba3208f4c759?w=200&h=200&fit=crop" },
+       { id: 606, day: 6, time: "22:00", activity: "住宿：Audur Guesthouse", tag: "hotel", image: "https://images.unsplash.com/photo-1482355347028-ff6de45d0117?w=200&h=200&fit=crop" },
+       { id: 701, day: 7, time: "09:00", activity: "整理行李 & 退房", image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=200&h=200&fit=crop" },
+       { id: 702, day: 7, time: "11:00", activity: "前往機場還車", image: "https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?w=200&h=200&fit=crop" },
+       { id: 703, day: 7, time: "14:00", activity: "KEF ✈️ HKG (回程航班)", tag: "flight", image: "https://images.unsplash.com/photo-1542296332-2e44a996aa0d?w=200&h=200&fit=crop" },
+       { id: 704, day: 7, time: "23:55", activity: "機上休息 / 轉機", image: "https://images.unsplash.com/photo-1527634311077-9943f7be34e6?w=200&h=200&fit=crop" },
+       { id: 801, day: 8, time: "18:00", activity: "抵達香港 HKG 轉機回台灣", tag: "flight", image: "https://images.unsplash.com/photo-1506318164473-2dfd3ede3623?w=200&h=200&fit=crop" },
+       { id: 802, day: 8, time: "20:30", activity: "抵達台灣溫暖的家 🇹🇼", tag: "flight", image: "https://images.unsplash.com/photo-1509356843151-3e7d96241e11?w=200&h=200&fit=crop" }
     ];
 
     let appState = {
