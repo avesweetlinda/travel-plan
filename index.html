@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>冰島之旅 Iceland Vibe 🇮🇸</title>
+    <!-- 引入 SortableJS 實現拖拉功能 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    
+    <!-- 引入 Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // ==========================================
+        // ★★★ 1. 請將你的 Firebase Config 貼在下方 ★★★
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBOjKc027UOSZRV3ao5l8-33bQGPZ3pBYM",
+            authDomain: "traveling-85185.firebaseapp.com",
+            projectId: "traveling-85185",
+            storageBucket: "traveling-85185.firebasestorage.app",
+            messagingSenderId: "178405000657",
+            appId: "1:178405000657:web:687bb52bae2151bc7e0cf0",
+            measurementId: "G-7QWLJ42T9W"
+        };
+
+        // ==========================================
+        // ★★★ 2. 固定行程 ID (選填) ★★★
+        // 若要分享特定行程給朋友，請在此填入 ID (例如 "abc12345")
+        // ==========================================
+        const PRESET_TRIP_ID = ""; 
+
+
+        // --- Firebase 初始化邏輯 (包含防呆檢查) ---
+        if (!firebaseConfig || !firebaseConfig.projectId) {
+            document.addEventListener('DOMContentLoaded', () => {
+                const overlay = document.getElementById('loading-overlay');
+                if(overlay) {
+                    overlay.innerHTML = `
+                        <div style="background:white; padding:30px; border-radius:12px; text-align:center; max-width:80%; box-shadow:0 10px 25px rgba(0,0,0,0.1);">
+                            <div style="font-size: 40px; margin-bottom:10px;">⚠️</div>
+                            <h2 style="color:#2d3436; margin:0 0 10px 0;">尚未設定 Firebase</h2>
+                            <p style="color:#636e72; line-height:1.6;">程式碼中的 <code>firebaseConfig</code> 是空的。<br>請用記事本打開此檔案填入設定。</p>
+                            <button onclick="location.reload()" style="background:#0984e3; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:15px;">已填好，重新整理</button>
+                        </div>
+                    `;
+                }
+            });
+            throw new Error("Firebase Config is missing");
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // 將 Firebase 功能掛載到全域
+        window.firebaseModules = { db, auth, doc, getDoc, setDoc, signInAnonymously, onAuthStateChanged };
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
+
+    <style>
+        :root {
+            /* 白色系極簡配色 */
+            --bg-gradient: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --glass-border: 1px solid rgba(0, 0, 0, 0.05);
+            --text-color: #2d3436;
+            --accent-color: #0984e3; /* 冰島藍 */
+            --accent-hover: #74b9ff;
+            --sub-text: #636e72;
+            --input-bg: #f5f6fa;
+            --sidebar-bg: rgba(241, 242, 246, 0.8);
+            --danger-color: #d63031;
+            --warning-color: #f39c12;
+            --info-color: #00cec9;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            transition: all 0.3s;
+        }
+
+        /* Loading Overlay (新功能) */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.95); z-index: 9999;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            font-weight: bold; color: var(--accent-color);
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #eee;
+            border-top: 4px solid var(--accent-color); border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 15px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Toast Notification (新功能) */
+        #toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 10px 25px;
+            border-radius: 50px; font-size: 0.9rem; opacity: 0;
+            transition: opacity 0.3s; pointer-events: none; z-index: 10000;
+        }
+        #toast.show { opacity: 1; }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: var(--glass-border);
+            padding: 0;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 橫幅圖片區域 */
+        .banner {
+            width: 100%;
+            height: 180px;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+            cursor: pointer;
+            group: banner;
+        }
+
+        .banner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 10s ease, filter 0.3s;
+        }
+        
+        .banner:hover img {
+            transform: scale(1.05);
+            filter: brightness(0.8);
+        }
+
+        /* 封面編輯提示 */
+        .banner-edit-hint {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .banner:hover .banner-edit-hint {
+            opacity: 1;
+        }
+
+        .banner-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            padding: 20px 30px;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-weight: 800;
+            font-size: 2rem;
+            margin: 0;
+            color: #fff;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            letter-spacing: 1px;
+            pointer-events: auto;
+            cursor: pointer;
+            display: inline-block;
+            transition: all 0.2s;
+            padding: 2px 10px;
+            border-radius: 8px;
+        }
+
+        h1:hover {
+            background: rgba(255, 255, 255, 0.2);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        h1::after {
+            content: '✎';
+            font-size: 1.2rem;
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            vertical-align: middle;
+        }
+
+        h1:hover::after { opacity: 1; }
+
+        /* 內容區塊佈局 */
+        .content-wrapper {
+            display: flex;
+            min-height: 600px;
+            position: relative;
+        }
+
+        /* 左側導覽列 */
+        .sidebar {
+            width: 110px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid rgba(0,0,0,0.05);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex-shrink: 0;
+            overflow-y: auto; 
+        }
+
+        /* 側邊欄按鈕容器 - 用於 Sortable */
+        #daySidebarList {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .sidebar-btn {
+            padding: 12px 0;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--sub-text);
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            font-family: inherit;
+            font-size: 0.9rem;
+            position: relative;
+            user-select: none; 
+            cursor: grab; 
+        }
+
+        .sidebar-btn:active {
+            cursor: grabbing;
+        }
+
+        .sidebar-btn:hover {
+            color: var(--accent-color);
+            background: rgba(255,255,255,0.5);
+        }
+
+        .sidebar-btn.active {
+            background: #fff;
+            color: var(--accent-color);
+            font-weight: 800;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .sidebar-btn.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--accent-color);
+        }
+
+        /* "全部" 按鈕不應該被拖動，給它一個特殊樣式 */
+        .sidebar-btn.static-btn {
+            cursor: pointer; 
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            margin-bottom: 5px;
+        }
+
+        /* 側邊欄拖曳時的幽靈樣式 */
+        .sidebar-sortable-ghost {
+            opacity: 0.4;
+            background: #dfe6e9;
+            border: 1px dashed #b2bec3;
+        }
+        
+        .sidebar-sortable-drag {
+            background: #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: scale(1.05);
+            z-index: 999;
+        }
+
+        /* 功能按鈕區（天數與鎖定） */
+        .sidebar-controls {
+            margin-top: 20px;
+            padding: 0 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            padding-top: 15px;
+        }
+
+        .day-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .control-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            background: #fff;
+            color: var(--sub-text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .control-btn:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        /* 按鈕共用樣式 */
+        .action-btn {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            background: #fff;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            color: var(--sub-text);
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #f1f2f6;
+            color: #2d3436;
+        }
+        
+        /* 分享按鈕 */
+        .share-btn {
+            background: #e3f2fd;
+            border-color: #bbdefb;
+            color: #1976d2;
+            font-weight: bold;
+        }
+        .share-btn:hover {
+            background: #2196f3;
+            color: white;
+            border-color: #2196f3;
+        }
+        
+        /* 鎖定按鈕 */
+        .lock-btn:hover { background: #f1f2f6; }
+        .lock-btn.active {
+            background: #fff3e0;
+            color: #e67e22;
+            border-color: #ffe0b2;
+            font-weight: bold;
+        }
+
+        /* 清除按鈕 */
+        .clear-btn {
+            background: #fff0f0;
+            border-color: #ffcccc;
+            color: var(--danger-color);
+        }
+        .clear-btn:hover {
+            background: var(--danger-color);
+            color: white;
+            border-color: var(--danger-color);
+        }
+
+        /* 重置按鈕 */
+        .reset-btn {
+            background: #f0f0f0;
+            border-color: #ddd;
+            color: #636e72;
+            font-size: 0.8rem;
+        }
+        .reset-btn:hover {
+            background: #636e72;
+            color: white;
+            border-color: #636e72;
+        }
+
+        /* 右側主內容區 */
+        .main-panel {
+            flex: 1;
+            padding: 25px;
+            background: rgba(255,255,255,0.4);
+            overflow-y: auto;
+            max-height: 800px;
+        }
+
+        /* 輸入區塊 */
+        .input-group {
+            background: #fff;
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            border: 1px solid #eee;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            align-items: center;
+        }
+
+        select, input {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        select#dayInput { flex: 0 0 90px; }
+        select#tagInput { flex: 0 0 130px; } 
+        input[type="time"] { flex: 0 0 100px; }
+        input[type="text"] { flex: 1; min-width: 120px; }
+
+        input:focus, select:focus {
+            border-color: var(--accent-color);
+            background: #fff;
+        }
+
+        button.add-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.add-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        /* 行程列表 */
+        .day-section {
+            margin-bottom: 30px;
+        }
+        
+        .day-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        
+        .day-badge {
+            background: var(--text-color);
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            margin-right: 10px;
+        }
+
+        /* 拖拉容器樣式 */
+        .plan-list-container {
+            min-height: 50px; 
+            padding-bottom: 10px;
+        }
+
+        /* 行程拖拉時的視覺回饋 */
+        .plan-item.sortable-ghost {
+            opacity: 0.4;
+            background: #f0f0f0;
+            border: 2px dashed #ccc;
+        }
+        
+        .plan-item.sortable-drag {
+            background: #fff;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transform: rotate(2deg);
+        }
+
+        .plan-item {
+            background: #fff;
+            margin-bottom: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column; 
+            border: 1px solid transparent;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            transition: all 0.2s, transform 0s; 
+            cursor: grab; 
+        }
+        
+        .plan-item:active {
+            cursor: grabbing;
+        }
+
+        .plan-item:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .plan-main {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        /* --- 圖片與編輯功能樣式 --- */
+        .img-container {
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
+            margin-left: auto;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .plan-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            object-fit: cover;
+            background-color: #eee;
+            transition: filter 0.2s;
+        }
+
+        .img-placeholder {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            background-color: #f1f2f6;
+            border: 2px dashed #d1d8e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #a4b0be;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 5px;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+
+        .img-container:hover .plan-img { filter: brightness(0.8); }
+        .img-container:hover .img-placeholder { border-color: var(--accent-color); color: var(--accent-color); background: #fff; }
+        
+        .edit-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            opacity: 0;
+            font-size: 1.2rem;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .img-container:hover .edit-hint { opacity: 1; }
+
+        .plan-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .plan-time {
+            font-weight: 600;
+            color: var(--accent-color);
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            display: inline-block;
+            cursor: pointer; 
+            transition: color 0.2s;
+        }
+        .plan-time:hover { color: var(--accent-hover); }
+
+        .editable-text {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .editable-text:hover {
+            background: rgba(9, 132, 227, 0.1);
+        }
+        .editable-text::after {
+            content: '✎';
+            font-size: 0.8rem;
+            color: #b2bec3;
+            margin-left: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .editable-text:hover::after { opacity: 1; }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #dfe6e9;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0 0 0 10px;
+            align-self: flex-start;
+        }
+
+        .plan-item:hover .delete-btn { color: #b2bec3; }
+        .delete-btn:hover { color: #d63031 !important; }
+        
+        /* 標籤樣式 */
+        .tag-base { padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: opacity 0.2s; }
+        .tag-base:hover { opacity: 0.8; }
+        .tag-flight { background-color: #e3f2fd; color: #1565c0; }
+        .tag-hotel { background-color: #e8f5e9; color: #2e7d32; }
+        .tag-food { background-color: #fff3e0; color: #e67e22; }
+        .tag-sightseeing { background-color: #e0f7fa; color: #0097a7; }
+        .tag-none { border: 1px dashed #ccc; color: #999; font-size: 0.7rem; padding: 1px 5px; }
+
+        .plan-details h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: var(--text-color);
+            line-height: 1.4;
+            display: inline-block;
+        }
+
+        /* --- 資訊列 (標籤+按鈕) --- */
+        .plan-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        /* --- 備註區域樣式 --- */
+        .note-toggle-btn {
+            background: none;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            color: #b2bec3;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .note-toggle-btn:hover {
+            background: #f1f2f6;
+            color: var(--accent-color);
+        }
+        .note-toggle-btn.has-note {
+            color: var(--accent-color);
+            border-color: rgba(9, 132, 227, 0.2);
+        }
+
+        .plan-note-area {
+            width: 100%;
+            display: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #f1f2f6;
+            animation: expandNote 0.2s ease-out;
+            cursor: default; 
+        }
+
+        @keyframes expandNote {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .note-textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px;
+            border: 1px solid #dfe6e9;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+            box-sizing: border-box;
+            background: #fafafa;
+            color: #636e72;
+            outline: none;
+        }
+        .note-textarea:focus {
+            border-color: var(--accent-color);
+            background: #fff;
+        }
+
+        .reset-link {
+            text-align: center;
+            display: block;
+            margin-top: 30px;
+            color: #b2bec3;
+            font-size: 0.8rem;
+            text-decoration: none;
+            cursor: pointer;
+            padding-bottom: 20px;
+        }
+        .reset-link:hover { text-decoration: underline; }
+
+        /* --- 圖片燈箱与通用 Modal --- */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 2000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.85); 
+            backdrop-filter: blur(5px);
+            animation: fadeInModal 0.2s;
+            /* 讓 Flexbox 幫忙置中 */
+            display: none; /* 預設隱藏，由 JS 控制 */
+            justify-content: center;
+            align-items: center;
+        }
+        
+        @keyframes fadeInModal {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 圖片專用 Content */
+        img.modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 2001;
+        }
+        .modal-close:hover { color: #bbb; }
+
+
+        /* --- 鎖定模式樣式 --- */
+        body.locked-mode .input-group { display: none; }
+        body.locked-mode .delete-btn { display: none !important; }
+        body.locked-mode .day-controls { display: none; }
+        
+        /* 鎖定時也隱藏側邊欄的按鈕 */
+        body.locked-mode .clear-btn { display: none; } 
+        body.locked-mode .reset-btn { display: none; }
+        
+        /* 鎖定時禁用編輯功能 */
+        body.locked-mode .editable-text { pointer-events: none; }
+        body.locked-mode .editable-text::after { display: none; }
+        body.locked-mode .plan-time { pointer-events: none; } 
+        body.locked-mode .tag-base { pointer-events: none; opacity: 1; } 
+        
+        /* 鎖定時不能拖拉內容 */
+        body.locked-mode .plan-item { cursor: default; }
+
+        /* 鎖定時不能拖拉側邊欄按鈕 */
+        body.locked-mode .sidebar-btn { cursor: pointer; } 
+
+        /* 鎖定時圖片改為放大游標 */
+        body.locked-mode .img-container { cursor: zoom-in; }
+        body.locked-mode .edit-hint { display: none; }
+        
+        /* 鎖定時，若無圖片則完全透明且無法點擊 */
+        body.locked-mode .img-container.img-empty { 
+            opacity: 0 !important;
+            pointer-events: none !important;
+            cursor: default !important;
+            border: none !important;
+            background: transparent !important;
+        } 
+        body.locked-mode .img-container.img-empty .img-placeholder {
+            display: none !important;
+        }
+        
+        body.locked-mode .banner { pointer-events: none; }
+        body.locked-mode .banner-edit-hint { display: none; }
+        body.locked-mode h1 { pointer-events: none; }
+        body.locked-mode h1::after { display: none; }
+        
+        /* 鎖定時備註區變為唯讀 */
+        body.locked-mode .note-textarea {
+            border: none;
+            background: transparent;
+            resize: none;
+            padding: 5px 0;
+            color: #2d3436;
+            pointer-events: none; 
+        }
+
+        /* 鎖定時，若無備註內容，隱藏備註按鈕 */
+        body.locked-mode .note-toggle-btn:not(.has-note) {
+            display: none;
+        }
+
+        /* RWD: 手機版調整 */
+        @media (max-width: 600px) {
+            .content-wrapper { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                overflow-x: auto;
+                border-right: none;
+                border-bottom: 1px solid rgba(0,0,0,0.05);
+                padding: 10px;
+                gap: 10px;
+                background: #fff;
+                align-items: center;
+            }
+            #daySidebarList {
+                flex-direction: row;
+                width: auto;
+            }
+            .sidebar-controls { flex-direction: row; margin-top: 0; margin-left: 10px; border-left: 1px solid #eee; padding-left: 10px; padding-top: 0; border-top: none;}
+            .action-btn { width: auto; font-size: 1rem; padding: 5px 10px; }
+            .sidebar-btn { width: auto; padding: 8px 15px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+            /* 靜態按鈕在手機版不需要下底線，改為右邊距 */
+            .sidebar-btn.static-btn { border-bottom: none; margin-bottom: 0; border-right: 1px solid rgba(0,0,0,0.05); padding-right: 15px; margin-right: 5px; }
+
+            .sidebar-btn.active { background: var(--accent-color); color: #fff; box-shadow: 0 4px 10px rgba(9, 132, 227, 0.3); }
+            .sidebar-btn.active::before { display: none; }
+            
+            .main-panel { padding: 15px; }
+            .input-group { flex-direction: column; align-items: stretch;}
+            select, input, button.add-btn { width: 100%; }
+            .img-container { width: 60px; height: 60px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loading-overlay">
+    <div class="spinner"></div>
+    <div>正在連線雲端資料庫...</div>
+</div>
+
+<div id="toast">已複製分享連結！</div>
+
+<div class="container">
+    <!-- 點擊橫幅可以換圖片 -->
+    <div class="banner" onclick="editBanner()" title="點擊更換封面圖片">
+        <img id="bannerImg" src="https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=1000&auto=format&fit=crop" 
+             alt="Iceland Landscape">
+        <div class="banner-edit-hint">📷 更換封面</div>
+        <div class="banner-overlay">
+            <!-- 點擊標題可以修改 -->
+            <h1 id="mainTitle" onclick="editTitle(event)" title="點擊修改標題">冰島環島攻略 🇮🇸</h1>
+        </div>
+    </div>
+    
+    <div class="content-wrapper">
+        <!-- 左側導覽列 -->
+        <div class="sidebar" id="sidebarContainer">
+            <!-- "全部" 按鈕固定在最上方，不參與拖曳 -->
+            <button id="btn-all" class="sidebar-btn static-btn" onclick="switchView('all')">全部</button>
+            
+            <!-- 可拖曳的天數按鈕列表容器 -->
+            <div id="daySidebarList">
+                <!-- JS 自動生成按鈕 -->
+            </div>
+            
+            <div class="sidebar-controls">
+                <!-- 天數管理 -->
+                <div class="day-controls">
+                    <button class="control-btn" onclick="changeTotalDays(-1)" title="減少一天">－</button>
+                    <button class="control-btn" onclick="changeTotalDays(1)" title="增加一天">＋</button>
+                </div>
+
+                <!-- 分享按鈕 (新功能) -->
+                <button class="action-btn share-btn" onclick="shareTrip()" title="複製網址分享給朋友">
+                    🔗 分享行程
+                </button>
+
+                <!-- 鎖定按鈕 -->
+                <button id="lockBtn" class="action-btn lock-btn" onclick="toggleLock()" title="鎖定/解鎖行程">
+                    <span id="lockIcon">🔓</span> <span id="lockText" style="font-size:0.8rem">編輯中</span>
+                </button>
+
+                <!-- 清除按鈕 -->
+                <button class="action-btn clear-btn" onclick="clearAllPlans()" title="清空所有行程">
+                    🗑️ 清除所有行程
+                </button>
+
+                <!-- 重置按鈕 -->
+                <button class="action-btn reset-btn" onclick="resetDefault()" title="還原至範例行程">
+                    ↺ 重置為預設
+                </button>
+            </div>
+        </div>
+
+        <!-- 右側主內容 -->
+        <div class="main-panel">
+            <div class="input-group">
+                <select id="dayInput">
+                    <!-- JS 生成選項 -->
+                </select>
+                <input type="time" id="timeInput">
+                <select id="tagInput">
+                    <option value="">(無標籤)</option>
+                    <option value="sightseeing">🏔️ 景點</option>
+                    <option value="flight">✈️ 航班</option>
+                    <option value="hotel">🏨 住宿</option>
+                    <option value="food">🍽️ 美食</option>
+                </select>
+                <input type="text" id="activityInput" placeholder="行程 (例如: 藍湖溫泉)">
+                <button class="add-btn" onclick="addPlan()">＋ 加入</button>
+            </div>
+
+            <div id="timeline-container">
+                <!-- 行程列表會渲染在這裡 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 圖片燈箱 -->
+<div id="imageModal" class="modal" onclick="closeModal()">
+    <span class="modal-close">&times;</span>
+    <img class="modal-content" id="modalImg">
+</div>
+
+<script>
+    // --- 雲端整合變數 ---
+    let db, auth, appId;
+    let tripId = null;
+    let currentUser = null;
+    let saveTimeout = null;
+
+    // 預設資料
+    const DEFAULT_TITLE = "冰島環島攻略 🇮🇸";
+    const DEFAULT_BANNER = "https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=1000&auto=format&fit=crop";
+    const defaultItinerary = [
+        // Day 1
+        { id: 101, day: 1, time: "08:00", activity: "TPE ✈️ HKG (國泰 CX477/495)", tag: "flight", image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=200&h=200&fit=crop", note: "記得提早2小時到機場報到" },
+        { id: 102, day: 1, time: "14:55", activity: "HKG 轉機 (中轉歐洲)", tag: "flight", image: "https://images.unsplash.com/photo-1542296332-2e44a996aa0d?w=200&h=200&fit=crop" },
+        { id: 103, day: 1, time: "18:00", activity: "抵達冰島 KEF 機場 & 取車", tag: "flight", image: "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=200&h=200&fit=crop" },
+        { id: 104, day: 1, time: "19:30", activity: "住宿：Odinsve Hotel", tag: "hotel", image: "https://images.unsplash.com/photo-1596425318727-2c18510842e3?w=200&h=200&fit=crop" },
+        { id: 105, day: 1, time: "20:00", activity: "Bonus 小豬超市 & Outlet", image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=200&h=200&fit=crop" },
+        { id: 106, day: 1, time: "21:00", activity: "晚餐：Íslenski barinn (燉羊腿)", tag: "food", image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=200&h=200&fit=crop" },
+        
+        // Day 2
+        { id: 201, day: 2, time: "09:00", activity: "Bæjarins Beztu Pylsur (熱狗堡)", tag: "food", image: "https://images.unsplash.com/photo-1612392166886-ee8475b03af2?w=200&h=200&fit=crop" },
+        { id: 202, day: 2, time: "11:00", activity: "Skógafoss 史可加瀑布", tag: "sightseeing", image: "https://images.unsplash.com/photo-1520690214124-2405c5217036?w=200&h=200&fit=crop" },
+        { id: 203, day: 2, time: "13:30", activity: "Reynisfjara 黑沙灘", tag: "sightseeing", image: "https://images.unsplash.com/photo-1508138221679-760a23a2285b?w=200&h=200&fit=crop" },
+        { id: 204, day: 2, time: "15:00", activity: "午點：The Soup Company (熔岩湯)", tag: "food", image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=200&h=200&fit=crop" },
+        { id: 205, day: 2, time: "18:00", activity: "住宿：The Milk Factory", tag: "hotel", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=200&h=200&fit=crop" },
+        { id: 206, day: 2, time: "19:30", activity: "晚餐：Kaffi Hornid", tag: "food", image: "https://images.unsplash.com/photo-1550966871-3ed3c47e2ce2?w=200&h=200&fit=crop" },
+
+        // Day 3
+        { id: 301, day: 3, time: "08:30", activity: "牛奶工廠早餐 & 出發", tag: "food", image: "https://images.unsplash.com/photo-1533089862017-ec329abb0511?w=200&h=200&fit=crop" },
+        { id: 302, day: 3, time: "10:00", activity: "📍 冰河湖藍洞之旅 (Blue Ice Cave)", tag: "sightseeing", image: "https://images.unsplash.com/photo-1490735891913-40897cdaafd1?w=200&h=200&fit=crop" },
+        { id: 303, day: 3, time: "13:00", activity: "午餐：當地小攤販", tag: "food", image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=200&h=200&fit=crop" },
+        { id: 304, day: 3, time: "14:30", activity: "Jökulsárlón 冰河湖散步", tag: "sightseeing", image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&h=200&fit=crop" },
+        { id: 305, day: 3, time: "18:00", activity: "晚餐：Pakkhús (必吃龍蝦餐 🦞)", tag: "food", image: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=200&h=200&fit=crop" },
+        { id: 306, day: 3, time: "20:00", activity: "住宿：The Milk Factory (看極光!)", tag: "hotel", image: "https://images.unsplash.com/photo-1483347752467-85239967961c?w=200&h=200&fit=crop" },
+
+        // Day 4
+        { id: 401, day: 4, time: "09:00", activity: "早餐 & Check-out", image: "https://images.unsplash.com/photo-1493770348161-369560ae357d?w=200&h=200&fit=crop" },
+        { id: 402, day: 4, time: "11:00", activity: "Fjaðrárgljúfur 羽毛河峽谷", tag: "sightseeing", image: "https://images.unsplash.com/photo-1504829857797-ddff29c27927?w=200&h=200&fit=crop" },
+        { id: 403, day: 4, time: "14:00", activity: "Seljalandsfoss 水簾洞瀑布", tag: "sightseeing", image: "https://images.unsplash.com/photo-1533423793766-26156e54589d?w=200&h=200&fit=crop" },
+        { id: 404, day: 4, time: "17:00", activity: "住宿：Audur Guesthouse", tag: "hotel", image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=200&h=200&fit=crop" },
+        { id: 405, day: 4, time: "19:00", activity: "晚餐：Icelandic Street Food (麵包湯)", tag: "food", image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=200&h=200&fit=crop" },
+
+        // Day 5
+        { id: 501, day: 5, time: "09:30", activity: "黃金圈一日遊 (Golden Circle)", tag: "sightseeing", image: "https://images.unsplash.com/photo-1476610182048-b716b8518aae?w=200&h=200&fit=crop" },
+        { id: 502, day: 5, time: "15:00", activity: "Blue Lagoon 藍湖溫泉 ♨️", tag: "sightseeing", image: "https://images.unsplash.com/photo-1533285785082-d2789182d334?w=200&h=200&fit=crop" },
+        { id: 503, day: 5, time: "19:00", activity: "晚餐：Seabaron (烤肉串/龍蝦湯)", tag: "food", image: "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=200&h=200&fit=crop" },
+        { id: 504, day: 5, time: "21:00", activity: "住宿：Audur Guesthouse", tag: "hotel", image: "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=200&h=200&fit=crop" },
+
+        // Day 6
+        { id: 601, day: 6, time: "10:00", activity: "雷克雅維克大教堂", tag: "sightseeing", image: "https://images.unsplash.com/photo-1555543714-36528d228c29?w=200&h=200&fit=crop" },
+        { id: 602, day: 6, time: "12:00", activity: "午餐：市區熱狗攤", tag: "food", image: "https://images.unsplash.com/photo-1620898583487-160e1d156161?w=200&h=200&fit=crop" },
+        { id: 603, day: 6, time: "14:00", activity: "Sky Lagoon 天空之湖", tag: "sightseeing", image: "https://images.unsplash.com/photo-1515658323427-4b5314eb4e13?w=200&h=200&fit=crop" },
+        { id: 604, day: 6, time: "17:00", activity: "教堂山 (Kirkjufell) / 看海豹", tag: "sightseeing", image: "https://images.unsplash.com/photo-1504893524553-bfe206dd8e96?w=200&h=200&fit=crop" },
+        { id: 605, day: 6, time: "20:00", activity: "晚餐：沒東西吃各自保命 😂", tag: "food", image: "https://images.unsplash.com/photo-1465311440653-ba3208f4c759?w=200&h=200&fit=crop" },
+        { id: 606, day: 6, time: "22:00", activity: "住宿：Audur Guesthouse", tag: "hotel", image: "https://images.unsplash.com/photo-1482355347028-ff6de45d0117?w=200&h=200&fit=crop" },
+
+        // Day 7
+        { id: 701, day: 7, time: "09:00", activity: "整理行李 & 退房", image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=200&h=200&fit=crop" },
+        { id: 702, day: 7, time: "11:00", activity: "前往機場還車", image: "https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?w=200&h=200&fit=crop" },
+        { id: 703, day: 7, time: "14:00", activity: "KEF ✈️ HKG (回程航班)", tag: "flight", image: "https://images.unsplash.com/photo-1542296332-2e44a996aa0d?w=200&h=200&fit=crop" },
+        { id: 704, day: 7, time: "23:55", activity: "機上休息 / 轉機", image: "https://images.unsplash.com/photo-1527634311077-9943f7be34e6?w=200&h=200&fit=crop" },
+
+        // Day 8
+        { id: 801, day: 8, time: "18:00", activity: "抵達香港 HKG 轉機回台灣", tag: "flight", image: "https://images.unsplash.com/photo-1506318164473-2dfd3ede3623?w=200&h=200&fit=crop" },
+        { id: 802, day: 8, time: "20:30", activity: "抵達台灣溫暖的家 🇹🇼", tag: "flight", image: "https://images.unsplash.com/photo-1509356843151-3e7d96241e11?w=200&h=200&fit=crop" }
+    ];
+
+    // 全局應用程式狀態 (取代 LocalStorage)
+    let appState = {
+        title: DEFAULT_TITLE,
+        banner: DEFAULT_BANNER,
+        totalDays: 8,
+        plans: JSON.parse(JSON.stringify(defaultItinerary))
+    };
+
+    let currentViewDay = 'all'; 
+    let isLocked = false; 
+    let sortables = []; 
+    let sidebarSortable = null;
+
+    // --- 啟動與 Firebase 連線 ---
+    window.addEventListener('firebase-ready', async () => {
+        const modules = window.firebaseModules;
+        db = modules.db;
+        auth = modules.auth;
+        
+        // 匿名登入
+        await modules.signInAnonymously(auth);
+        
+        modules.onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                await initTrip();
+            }
+        });
+    });
+
+    async function initTrip() {
+        const { doc, getDoc, setDoc } = window.firebaseModules;
+
+        // 1. 檢查固定 ID (PRESET_TRIP_ID)
+        if (typeof PRESET_TRIP_ID !== 'undefined' && PRESET_TRIP_ID) {
+            tripId = PRESET_TRIP_ID;
+        } else {
+            // 2. 檢查網址參數 ?trip=...
+            const urlParams = new URLSearchParams(window.location.search);
+            tripId = urlParams.get('trip');
+        }
+
+        if (!tripId) {
+            // 3. 都沒有 -> 建立新行程
+            tripId = crypto.randomUUID().substring(0, 8);
+            try {
+                // 嘗試更新網址 (預覽環境可能失敗，忽略錯誤)
+                const newUrl = `${window.location.pathname}?trip=${tripId}`;
+                window.history.pushState({path:newUrl}, '', newUrl);
+            } catch (e) { console.warn("Preview Mode: URL history update skipped."); }
+            
+            // 寫入預設資料
+            await saveToCloud(true);
+            hideLoading();
+            renderUI();
+        } else {
+            // 有 ID -> 讀取雲端資料
+            try {
+                // 使用 public_trips 集合方便分享
+                const docRef = doc(db, 'public_trips', tripId);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    appState = { ...appState, ...data }; // 合併資料
+                    if (!appState.plans) appState.plans = [];
+                } else {
+                    // ID 存在但資料庫沒有 -> 視為新行程
+                    await saveToCloud(true);
+                }
+            } catch (e) {
+                console.error("Load Error:", e);
+                alert("讀取失敗，請確認 Firebase Firestore 規則是否設定為 Test Mode。");
+            } finally {
+                hideLoading();
+                renderUI();
+            }
+        }
+    }
+
+    function autoSave() {
+        if (saveTimeout) clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => saveToCloud(), 1000);
+    }
+
+    async function saveToCloud(force = false) {
+        if (!currentUser || !tripId) return;
+        const { doc, setDoc } = window.firebaseModules;
+        try {
+            const docRef = doc(db, 'public_trips', tripId);
+            await setDoc(docRef, appState);
+            console.log("Cloud Saved");
+        } catch (e) {
+            console.error("Save Error:", e);
+        }
+    }
+
+    // --- UI 渲染與互動邏輯 ---
+
+    function hideLoading() {
+        const overlay = document.getElementById('loading-overlay');
+        if(overlay) overlay.style.display = 'none';
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function renderUI() {
+        renderHeader();
+        renderSidebar();
+        renderDaySelect();
+        renderAllPlans();
+    }
+
+    // --- Header ---
+    function renderHeader() {
+        document.getElementById('mainTitle').innerText = appState.title;
+        document.getElementById('bannerImg').src = appState.banner;
+    }
+
+    function editTitle(e) {
+        if(isLocked) return;
+        e.stopPropagation();
+        const newTitle = prompt("請輸入新的標題:", appState.title);
+        if (newTitle && newTitle.trim() !== "") {
+            appState.title = newTitle;
+            renderHeader();
+            autoSave();
+        }
+    }
+
+    function editBanner() {
+        if(isLocked) return;
+        const newBanner = prompt("請輸入新的封面圖片網址 (Image URL):", appState.banner);
+        if (newBanner && newBanner.trim() !== "") {
+            appState.banner = newBanner;
+            renderHeader();
+            autoSave();
+        }
+    }
+
+    // --- Sidebar ---
+    function renderSidebar() {
+        const sidebarList = document.getElementById('daySidebarList');
+        sidebarList.innerHTML = '';
+        if (sidebarSortable) {
+            sidebarSortable.destroy();
+            sidebarSortable = null;
+        }
+
+        const allBtn = document.getElementById('btn-all');
+        if (currentViewDay === 'all') allBtn.classList.add('active');
+        else allBtn.classList.remove('active');
+
+        for (let i = 1; i <= appState.totalDays; i++) {
+            const btn = document.createElement('button');
+            btn.className = `sidebar-btn ${currentViewDay == i ? 'active' : ''}`;
+            btn.textContent = `Day ${i}`;
+            btn.setAttribute('data-origin-day', i);
+            btn.onclick = () => switchView(i);
+            sidebarList.appendChild(btn);
+        }
+
+        sidebarSortable = new Sortable(sidebarList, {
+            group: 'sidebar-days',
+            animation: 150,
+            ghostClass: 'sidebar-sortable-ghost',
+            dragClass: 'sidebar-sortable-drag',
+            disabled: isLocked,
+            delay: 100, delayOnTouchOnly: true,
+            onEnd: function (evt) {
+                if (evt.oldIndex === evt.newIndex) return;
+                reorderDaysFromSidebar();
+            }
+        });
+    }
+
+    function reorderDaysFromSidebar() {
+        const sidebarList = document.getElementById('daySidebarList');
+        const buttons = Array.from(sidebarList.children);
+        const dayMapping = {};
+        
+        buttons.forEach((btn, index) => {
+            const oldDay = parseInt(btn.getAttribute('data-origin-day'));
+            const newDay = index + 1;
+            dayMapping[oldDay] = newDay;
+        });
+
+        appState.plans = appState.plans.map(plan => {
+            if (dayMapping[plan.day]) {
+                return { ...plan, day: dayMapping[plan.day] };
+            }
+            return plan;
+        });
+
+        if (currentViewDay !== 'all') {
+            currentViewDay = dayMapping[currentViewDay];
+        }
+
+        renderSidebar();
+        renderAllPlans();
+        autoSave();
+    }
+
+    function changeTotalDays(delta) {
+        if(isLocked) return;
+        const newTotal = appState.totalDays + delta;
+        if (newTotal < 1) return alert("至少要有一天吧！");
+        if (newTotal > 30) return alert("太多天了，請控制在 30 天內。");
+
+        if (delta < 0) {
+            const hasPlans = appState.plans.some(p => p.day === appState.totalDays);
+            if (hasPlans) {
+                if (!confirm(`Day ${appState.totalDays} 還有行程，確定要刪除嗎？`)) return;
+                appState.plans = appState.plans.filter(p => p.day !== appState.totalDays);
+            }
+        }
+
+        appState.totalDays = newTotal;
+        renderSidebar();
+        renderDaySelect();
+        if (typeof currentViewDay === 'number' && currentViewDay > appState.totalDays) {
+            switchView('all');
+        }
+        autoSave();
+    }
+
+    function switchView(day) {
+        currentViewDay = day;
+        renderSidebar();
+        renderAllPlans();
+        if (day !== 'all') document.getElementById('dayInput').value = day;
+    }
+
+    function renderDaySelect() {
+        const select = document.getElementById('dayInput');
+        const currentVal = select.value;
+        select.innerHTML = '';
+        for (let i = 1; i <= appState.totalDays; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `Day ${i}`;
+            select.appendChild(option);
+        }
+        if (currentVal && currentVal <= appState.totalDays) select.value = currentVal;
+    }
+
+    // --- Timeline / Plans ---
+    function renderAllPlans() {
+        const container = document.getElementById('timeline-container');
+        container.innerHTML = '';
+        sortables.forEach(s => s.destroy());
+        sortables = [];
+        
+        let displayPlans = appState.plans;
+        if (currentViewDay !== 'all') {
+            displayPlans = appState.plans.filter(p => p.day == currentViewDay);
+        }
+
+        // 排序
+        displayPlans.sort((a, b) => {
+            if (a.day !== b.day) return a.day - b.day;
+            return a.time.localeCompare(b.time);
+        });
+
+        const grouped = displayPlans.reduce((acc, curr) => {
+            (acc[curr.day] = acc[curr.day] || []).push(curr);
+            return acc;
+        }, {});
+
+        const days = Object.keys(grouped).sort((a,b) => a-b);
+        
+        if (currentViewDay !== 'all' && days.length === 0) {
+             days.push(currentViewDay);
+             grouped[currentViewDay] = [];
+        } else if (days.length === 0 && appState.plans.length === 0) {
+            container.innerHTML = `<div style="text-align:center; color:#999; margin-top:50px;">目前沒有行程，快去新增吧！</div>`;
+            return;
+        }
+
+        days.forEach(day => {
+            const section = document.createElement('div');
+            section.className = 'day-section';
+            
+            const header = document.createElement('div');
+            header.className = 'day-header';
+            header.innerHTML = `<span class="day-badge">Day ${day}</span>`;
+            section.appendChild(header);
+
+            const listContainer = document.createElement('div');
+            listContainer.className = 'plan-list-container';
+            listContainer.setAttribute('data-day', day);
+            
+            if (grouped[day]) {
+                grouped[day].forEach(plan => {
+                    const item = createPlanItem(plan);
+                    listContainer.appendChild(item);
+                });
+            }
+
+            section.appendChild(listContainer);
+            container.appendChild(section);
+
+            if (!isLocked) {
+                const sortable = new Sortable(listContainer, {
+                    group: 'shared',
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    dragClass: 'sortable-drag',
+                    handle: '.plan-item',
+                    delay: 100, delayOnTouchOnly: true,
+                    onEnd: function () { saveDragOrder(); }
+                });
+                sortables.push(sortable);
+            }
+        });
+    }
+
+    function createPlanItem(plan) {
+        const item = document.createElement('div');
+        item.className = 'plan-item';
+        item.setAttribute('data-id', plan.id);
+        
+        let tagHtml = '';
+        let tagClass = 'tag-none';
+        let tagText = '(無標籤)';
+        if (plan.tag === 'flight') { tagClass = 'tag-flight'; tagText = '✈️ 航班'; }
+        else if (plan.tag === 'hotel') { tagClass = 'tag-hotel'; tagText = '🏨 住宿'; }
+        else if (plan.tag === 'food') { tagClass = 'tag-food'; tagText = '🍽️ 美食'; }
+        else if (plan.tag === 'sightseeing') { tagClass = 'tag-sightseeing'; tagText = '🏔️ 景點'; }
+        
+        if (!isLocked || (plan.tag && plan.tag !== '')) {
+             tagHtml = `<span class="tag-base ${tagClass}" onclick="editTag(${plan.id})" title="${isLocked ? '' : '點擊切換標籤'}">${tagText}</span>`;
+        }
+
+        let imgHtml = '';
+        const clickAction = `handleImageClick(${plan.id}, '${plan.image || ''}')`;
+        const titleAttr = isLocked ? "點擊放大" : "點擊修改圖片";
+        const onErrorCode = `this.style.display='none'; if(document.body.classList.contains('locked-mode')){ this.parentNode.style.display='none'; } else { this.nextElementSibling.style.display='flex'; }`;
+
+        if (plan.image && plan.image.trim() !== "") {
+            imgHtml = `
+                <div class="img-container" onclick="${clickAction}" title="${titleAttr}">
+                    <img src="${plan.image}" class="plan-img" alt="行程圖片" onerror="${onErrorCode}">
+                    <div class="img-placeholder" style="display:none">＋圖片</div>
+                    <span class="edit-hint">📷</span>
+                </div>`;
+        } else if (!isLocked) {
+            imgHtml = `
+                <div class="img-container img-empty" onclick="${clickAction}" title="點擊新增圖片">
+                    <div class="img-placeholder">＋圖片</div>
+                </div>`;
+        }
+        
+        const hasNoteClass = (plan.note && plan.note.trim() !== "") ? "has-note" : "";
+        
+        item.innerHTML = `
+            <div class="plan-main">
+                <div class="plan-content">
+                    <span class="plan-time" onclick="editTime(${plan.id})" title="${isLocked ? '' : '點擊修改時間'}">${plan.time}</span>
+                    <div class="plan-details">
+                        <h3 class="editable-text" onclick="editActivity(${plan.id})" title="點擊修改文字">${plan.activity}</h3>
+                        <div class="plan-meta">
+                            ${tagHtml}
+                            <button id="note-btn-${plan.id}" class="note-toggle-btn ${hasNoteClass}" onclick="toggleNote(${plan.id})">📝 備註</button>
+                        </div>
+                    </div>
+                </div>
+                ${imgHtml}
+                <button class="delete-btn" onclick="deletePlan(${plan.id})">&times;</button>
+            </div>
+            <div id="note-area-${plan.id}" class="plan-note-area">
+                <textarea class="note-textarea" placeholder="在此輸入備註事項..." onchange="saveNote(${plan.id}, this)">${plan.note || ''}</textarea>
+            </div>
+        `;
+        return item;
+    }
+
+    function saveDragOrder() {
+        const newPlans = [];
+        document.querySelectorAll('.plan-list-container').forEach(container => {
+            const day = parseInt(container.getAttribute('data-day'));
+            container.querySelectorAll('.plan-item').forEach(item => {
+                const id = parseInt(item.getAttribute('data-id'));
+                const originalPlan = appState.plans.find(p => p.id === id);
+                if (originalPlan) {
+                    originalPlan.day = day;
+                    newPlans.push(originalPlan);
+                }
+            });
+        });
+
+        if (currentViewDay !== 'all') {
+            const hiddenPlans = appState.plans.filter(p => p.day != currentViewDay);
+            newPlans.push(...hiddenPlans);
+        }
+        
+        appState.plans = newPlans;
+        autoSave();
+    }
+
+    // --- Actions ---
+
+    function toggleLock() {
+        isLocked = !isLocked;
+        const body = document.body;
+        const lockBtn = document.getElementById('lockBtn');
+        const lockIcon = document.getElementById('lockIcon');
+        const lockText = document.getElementById('lockText');
+
+        if (isLocked) {
+            body.classList.add('locked-mode');
+            lockBtn.classList.add('active');
+            lockIcon.textContent = '🔒';
+            lockText.textContent = '已鎖定';
+            if (sidebarSortable) sidebarSortable.option("disabled", true);
+        } else {
+            body.classList.remove('locked-mode');
+            lockBtn.classList.remove('active');
+            lockIcon.textContent = '🔓';
+            lockText.textContent = '編輯中';
+            if (sidebarSortable) sidebarSortable.option("disabled", false);
+        }
+        renderAllPlans();
+    }
+
+    function addPlan() {
+        if(isLocked) return; 
+        const day = document.getElementById('dayInput').value;
+        const time = document.getElementById('timeInput').value;
+        const tag = document.getElementById('tagInput').value; 
+        const activity = document.getElementById('activityInput').value;
+
+        if (!time || !activity) return alert("請輸入時間和內容");
+
+        const plan = {
+            id: Date.now(),
+            day: parseInt(day),
+            time: time,
+            activity: activity,
+            tag: tag,
+            image: "",
+            note: ""
+        };
+
+        appState.plans.push(plan);
+        
+        if (currentViewDay !== 'all' && currentViewDay != day) {
+            switchView(parseInt(day));
+        } else {
+            renderAllPlans();
+        }
+        
+        document.getElementById('activityInput').value = '';
+        autoSave();
+    }
+
+    function deletePlan(id) {
+        if(isLocked) return;
+        if(!confirm('刪除此行程？')) return;
+        appState.plans = appState.plans.filter(p => p.id !== id);
+        renderAllPlans();
+        autoSave();
+    }
+
+    function clearAllPlans() {
+        if(isLocked) return;
+        if(confirm("確定要清除所有行程嗎？這將刪除所有天數與行程，一切重新開始。")) {
+            appState.plans = [];
+            appState.totalDays = 1;
+            renderSidebar();
+            renderDaySelect();
+            switchView('all');
+            autoSave();
+        }
+    }
+
+    function handleImageClick(id, url) {
+        if (isLocked) {
+            if(url && url !== '') openModal(url);
+        } else {
+            const plan = appState.plans.find(p => p.id === id);
+            if (!plan) return;
+            const newUrl = prompt("請輸入新的圖片網址:", plan.image || "");
+            if (newUrl !== null) { 
+                plan.image = newUrl.trim();
+                renderAllPlans();
+                autoSave();
+            }
+        }
+    }
+
+    function editTime(id) {
+        if(isLocked) return;
+        const plan = appState.plans.find(p => p.id === id);
+        if (!plan) return;
+        const newTime = prompt("請輸入新時間 (HH:MM):", plan.time);
+        if (newTime && /^\d{2}:\d{2}$/.test(newTime.trim())) {
+            plan.time = newTime.trim();
+            renderAllPlans();
+            autoSave();
+        }
+    }
+
+    function editActivity(id) {
+        if(isLocked) return;
+        const plan = appState.plans.find(p => p.id === id);
+        if (!plan) return;
+        const newText = prompt("修改行程內容:", plan.activity);
+        if (newText !== null && newText.trim() !== "") {
+            plan.activity = newText.trim();
+            renderAllPlans();
+            autoSave();
+        }
+    }
+
+    function editTag(id) {
+        if(isLocked) return;
+        const tags = ['', 'sightseeing', 'flight', 'hotel', 'food'];
+        const plan = appState.plans.find(p => p.id === id);
+        if (!plan) return;
+        const currentIdx = tags.indexOf(plan.tag || '');
+        const nextIdx = (currentIdx + 1) % tags.length;
+        plan.tag = tags[nextIdx];
+        renderAllPlans();
+        autoSave();
+    }
+
+    function toggleNote(id) {
+        const plan = appState.plans.find(p => p.id === id);
+        if (isLocked && (!plan || !plan.note || plan.note.trim() === "")) return;
+        const noteArea = document.getElementById(`note-area-${id}`);
+        noteArea.style.display = (noteArea.style.display === 'none' || noteArea.style.display === '') ? 'block' : 'none';
+    }
+
+    function saveNote(id, textarea) {
+        const plan = appState.plans.find(p => p.id === id);
+        if (plan) {
+            plan.note = textarea.value;
+            const btn = document.getElementById(`note-btn-${id}`);
+            if (plan.note && plan.note.trim() !== "") btn.classList.add('has-note');
+            else btn.classList.remove('has-note');
+            autoSave();
+        }
+    }
+
+    function openModal(url) {
+        document.getElementById('imageModal').style.display = "flex"; 
+        document.getElementById('modalImg').src = url;
+    }
+    function closeModal() {
+        document.getElementById('imageModal').style.display = "none";
+    }
+
+    function resetDefault() {
+        if(isLocked) return;
+        if(confirm('確定要重置回預設行程嗎？所有雲端修改將消失。')) {
+            appState.title = DEFAULT_TITLE;
+            appState.banner = DEFAULT_BANNER;
+            appState.totalDays = 8;
+            appState.plans = JSON.parse(JSON.stringify(defaultItinerary));
+            renderHeader();
+            renderSidebar();
+            renderDaySelect();
+            switchView('all');
+            autoSave();
+        }
+    }
+
+    function shareTrip() {
+        let url = window.location.href;
+        
+        if (!url.includes('trip=') && tripId) {
+            const separator = url.includes('?') ? '&' : '?';
+            url = `${url}${separator}trip=${tripId}`;
+        }
+        
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(url).then(() => showToast("已複製連結！🔗"));
+        } else {
+            let msg = `你的 Trip ID 是：${tripId}\n\n如果要傳檔案給朋友，請把這個 ID 填入 HTML 程式碼中的 PRESET_TRIP_ID 欄位。\n\n複製以下連結:`;
+            prompt(msg, url);
+        }
+    }
+
+</script>
+</body>
+</html>
